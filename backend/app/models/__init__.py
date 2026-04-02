@@ -5,6 +5,7 @@ from app.models.breach import MonitoredEmail, BreachRecord
 from app.models.domain import Domain
 from app.models.web_scan import WebScan, ScanFinding, ScanStatus, ScanFrequency
 from app.models.sandbox import SandboxFile, FileStatus
+from app.models.email_account import EmailAccount
 from app.models.email_threat import EmailThreat
 from app.models.notification import Notification, NotificationSeverity
 
@@ -22,6 +23,7 @@ __all__ = [
     "ScanFrequency",
     "SandboxFile",
     "FileStatus",
+    "EmailAccount",
     "EmailThreat",
     "Notification",
     "NotificationSeverity",

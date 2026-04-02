@@ -42,5 +42,11 @@ celery_app.conf.update(
             "schedule": 3600,
             "options": {"queue": "scanner"},
         },
+        # Email scan giornaliero alle 04:00 UTC
+        "daily-email-scan": {
+            "task": "app.modules.email_protection.tasks.daily_email_scan_all_orgs",
+            "schedule": 86400,
+            "options": {"queue": "email"},
+        },
     },
 )
