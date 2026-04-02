@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -7,21 +7,36 @@ from pydantic import BaseModel, ConfigDict
 from app.models.sandbox import FileStatus
 
 
-class SandboxResult(BaseModel):
+class SandboxUploadResponse(BaseModel):
+    """Risposta immediata dopo l'upload, prima che l'analisi completi."""
     model_config = ConfigDict(from_attributes=True)
 
-    file_id: UUID
+    id: UUID
     original_filename: str
     file_size: int
-    mime_type: str
-    sha256_hash: str
+    sha256_hash: Optional[str] = None
+    md5_hash: Optional[str] = None
     status: FileStatus
-    yara_matches: List[str]
-    vt_detections: Optional[int] = None
-    vt_total: Optional[int] = None
-    metadata: Optional[Dict] = None
+    created_at: datetime
+
+
+class SandboxResult(BaseModel):
+    """Risultato completo di analisi con tutti i campi."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    original_filename: str
+    file_size: int
+    mime_type: Optional[str] = None
+    file_magic: Optional[str] = None
+    sha256_hash: Optional[str] = None
+    md5_hash: Optional[str] = None
+    status: FileStatus
+    yara_matches: Optional[List[Any]] = None
+    virustotal_result: Optional[Dict[str, Any]] = None
+    metadata_extracted: Optional[Dict[str, Any]] = None
     analyzed_at: Optional[datetime] = None
-    uploaded_at: datetime
+    created_at: datetime
 
 
 class SandboxListItem(BaseModel):
@@ -30,7 +45,7 @@ class SandboxListItem(BaseModel):
     id: UUID
     original_filename: str
     file_size: int
-    mime_type: str
+    mime_type: Optional[str] = None
+    sha256_hash: Optional[str] = None
     status: FileStatus
-    sha256_hash: str
-    uploaded_at: datetime
+    created_at: datetime
