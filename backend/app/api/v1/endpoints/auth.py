@@ -23,8 +23,8 @@ from app.core.security import (
     verify_password,
     verify_totp,
 )
+from app.core.audit import audit
 from app.core.config import settings
-from app.models.audit_log import AuditLog
 from app.models.organization import Organization
 from app.models.user import User, UserRole
 from app.schemas.auth import (
@@ -49,25 +49,6 @@ def _slugify(name: str) -> str:
     slug = re.sub(r"[\s_-]+", "-", slug)
     slug = slug.strip("-")
     return slug[:100]
-
-
-async def _create_audit_log(
-    db: AsyncSession,
-    organization_id: uuid.UUID,
-    action: str,
-    user_id: uuid.UUID | None = None,
-    ip_address: str | None = None,
-    details: dict | None = None,
-) -> None:
-    """Append an audit log entry — never update, only insert."""
-    entry = AuditLog(
-        organization_id=organization_id,
-        user_id=user_id,
-        action=action,
-        ip_address=ip_address,
-        details=details,
-    )
-    db.add(entry)
 
 
 @router.post(
@@ -117,7 +98,7 @@ async def register(
     await db.flush()
 
     # Audit log
-    await _create_audit_log(
+    await audit(
         db,
         organization_id=org.id,
         user_id=user.id,
@@ -184,7 +165,7 @@ async def login(
     # Update last login
     user.last_login = datetime.now(timezone.utc)
 
-    await _create_audit_log(
+    await audit(
         db,
         organization_id=user.organization_id,
         user_id=user.id,
@@ -275,7 +256,7 @@ async def verify_mfa(
     current_user.mfa_enabled = True
     db.add(current_user)
 
-    await _create_audit_log(
+    await audit(
         db,
         organization_id=current_user.organization_id,
         user_id=current_user.id,
