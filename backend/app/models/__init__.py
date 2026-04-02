@@ -8,6 +8,7 @@ from app.models.sandbox import SandboxFile, FileStatus
 from app.models.email_account import EmailAccount
 from app.models.email_threat import EmailThreat
 from app.models.notification import Notification, NotificationSeverity
+from app.models.webhook_config import WebhookConfig
 
 __all__ = [
     "Organization",
@@ -27,4 +28,5 @@ __all__ = [
     "EmailThreat",
     "Notification",
     "NotificationSeverity",
+    "WebhookConfig",
 ]

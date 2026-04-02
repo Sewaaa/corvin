@@ -6,6 +6,7 @@ from app.modules.domain_reputation.router import router as domain_router
 from app.modules.web_scanner.router import router as web_scan_router
 from app.modules.email_protection.router import router as email_router
 from app.modules.sandbox.router import router as sandbox_router
+from app.modules.notifications.router import router as notifications_router
 
 api_router = APIRouter()
 
@@ -18,3 +19,4 @@ api_router.include_router(domain_router, prefix="/domain", tags=["domain"])
 api_router.include_router(web_scan_router, prefix="/web-scan", tags=["web-scan"])
 api_router.include_router(email_router, prefix="/email", tags=["email"])
 api_router.include_router(sandbox_router, prefix="/sandbox", tags=["sandbox"])
+api_router.include_router(notifications_router, prefix="/notifications", tags=["notifications"])
