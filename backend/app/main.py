@@ -2,14 +2,20 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.core.middleware import LoggingMiddleware, TenantIsolationMiddleware
+
+limiter = Limiter(key_func=get_remote_address)
 
 logger = structlog.get_logger(__name__)
 
@@ -64,6 +70,10 @@ app = FastAPI(
     ],
     lifespan=lifespan,
 )
+
+# Register rate limiter — slowapi reads app.state.limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Trusted hosts middleware (production hardening)
 if settings.environment == "production":
