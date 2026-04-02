@@ -27,8 +27,14 @@ celery_app.conf.update(
         # Breach check giornaliero alle 02:00 UTC
         "daily-breach-check": {
             "task": "app.modules.breach_monitor.tasks.daily_breach_check_all_orgs",
-            "schedule": 86400,  # ogni 24 ore in secondi
+            "schedule": 86400,
             "options": {"queue": "breach"},
+        },
+        # Domain scan giornaliero alle 03:00 UTC
+        "daily-domain-scan": {
+            "task": "app.modules.domain_reputation.tasks.daily_domain_scan_all",
+            "schedule": 86400,
+            "options": {"queue": "domain"},
         },
     },
 )

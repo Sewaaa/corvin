@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, date, timezone
 
-from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, JSON, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -38,6 +38,11 @@ class Domain(Base):
     # Reputation: 0 (terrible) - 100 (clean)
     reputation_score = Column(Integer, nullable=True)
     is_blacklisted = Column(Boolean, default=False, nullable=False)
+
+    # Risultati dell'ultimo scan (JSON — aggiornato ad ogni check)
+    dns_records = Column(JSON, nullable=True)      # MX, SPF, DMARC, NS records
+    scan_findings = Column(JSON, nullable=True)    # Lista di finding con severity
+    whois_data = Column(JSON, nullable=True)       # Dati WHOIS rilevanti
 
     last_scan_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
