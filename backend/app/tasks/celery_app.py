@@ -23,5 +23,12 @@ celery_app.conf.update(
         "app.modules.email_protection.*": {"queue": "email"},
         "app.modules.notifications.*": {"queue": "notifications"},
     },
-    beat_schedule={},
+    beat_schedule={
+        # Breach check giornaliero alle 02:00 UTC
+        "daily-breach-check": {
+            "task": "app.modules.breach_monitor.tasks.daily_breach_check_all_orgs",
+            "schedule": 86400,  # ogni 24 ore in secondi
+            "options": {"queue": "breach"},
+        },
+    },
 )
