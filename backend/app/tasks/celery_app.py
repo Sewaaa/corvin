@@ -36,5 +36,11 @@ celery_app.conf.update(
             "schedule": 86400,
             "options": {"queue": "domain"},
         },
+        # Web scan ricorrenti — controllati ogni ora
+        "scheduled-web-scans": {
+            "task": "app.modules.web_scanner.tasks.scheduled_web_scans",
+            "schedule": 3600,
+            "options": {"queue": "scanner"},
+        },
     },
 )

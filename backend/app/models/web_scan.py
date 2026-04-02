@@ -89,6 +89,8 @@ class ScanFinding(Base):
     )
 
     severity = Column(String(16), nullable=False, index=True)
+    # Categoria finding: security_headers, exposed_files, cms, ssl, cve, info
+    category = Column(String(64), nullable=False, default="info")
     title = Column(String(512), nullable=False)
     description = Column(Text, nullable=False)
     recommendation = Column(Text, nullable=True)
