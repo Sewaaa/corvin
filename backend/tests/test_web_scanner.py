@@ -53,7 +53,7 @@ async def add_verified_domain(client, token: str, domain: str = "scan-target.com
     domain_id = next(d["id"] for d in domains if d["domain"] == domain)
 
     with patch(
-        "app.modules.domain_reputation.service.verify_domain_ownership",
+        "app.modules.domain_reputation.router.verify_domain_ownership",
         return_value=True,
     ):
         verify_resp = await client.post(
