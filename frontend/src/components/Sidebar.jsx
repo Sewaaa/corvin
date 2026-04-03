@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/email',      label: 'Email Protection',  icon: '✉' },
   { to: '/sandbox',    label: 'File Sandbox',      icon: '⧫' },
   { to: '/notifications', label: 'Notifications',  icon: '◉' },
+  { to: '/reports',       label: 'Reports',         icon: '▤' },
 ];
 
 export default function Sidebar({ unreadCount = 0 }) {

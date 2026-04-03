@@ -50,6 +50,9 @@ pytest-asyncio==0.23.6
 pytest-cov==5.0.0
 aiosqlite==0.20.0
 
+# Reports
+reportlab==4.2.2
+
 # Utilities
 structlog==24.1.0
 pip-audit==2.7.3

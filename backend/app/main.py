@@ -66,7 +66,7 @@ app = FastAPI(
         {"name": "sandbox", "description": "File static analysis sandbox"},
         {"name": "email-protection", "description": "Email threat detection"},
         {"name": "notifications", "description": "Alerts and notifications"},
-        {"name": "reports", "description": "Executive and module reports"},
+        {"name": "reports", "description": "Executive PDF report + JSON summary aggregati"},
     ],
     lifespan=lifespan,
 )

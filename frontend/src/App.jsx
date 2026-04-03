@@ -9,6 +9,7 @@ import WebScanner from './pages/WebScanner';
 import EmailProtection from './pages/EmailProtection';
 import FileSandbox from './pages/FileSandbox';
 import Notifications from './pages/Notifications';
+import Reports from './pages/Reports';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="email" element={<EmailProtection />} />
             <Route path="sandbox" element={<FileSandbox />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="reports" element={<Reports />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
