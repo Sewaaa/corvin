@@ -4,13 +4,16 @@ from typing import AsyncGenerator
 
 from app.core.config import settings
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.environment == "development",
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-)
+_is_sqlite = settings.database_url.startswith("sqlite")
+_engine_kwargs: dict = {
+    "echo": settings.environment == "development",
+    "pool_pre_ping": not _is_sqlite,  # StaticPool (SQLite) doesn't support pre-ping
+}
+if not _is_sqlite:
+    _engine_kwargs["pool_size"] = 10
+    _engine_kwargs["max_overflow"] = 20
+
+engine = create_async_engine(settings.database_url, **_engine_kwargs)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
