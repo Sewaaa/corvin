@@ -162,9 +162,10 @@ async def test_summary_counts_scoped_to_tenant(client, db_session):
     token_b = await register_and_get_token(client, REGISTER_B)
 
     # Aggiungi una email monitorata per org_B
+    import uuid as _uuid
     from app.models.breach import MonitoredEmail
     user_b_resp = await client.get("/api/v1/auth/me", headers=auth_headers(token_b))
-    org_b_id = user_b_resp.json()["organization_id"]
+    org_b_id = _uuid.UUID(user_b_resp.json()["organization_id"])
 
     me = MonitoredEmail(
         organization_id=org_b_id,

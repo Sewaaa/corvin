@@ -25,9 +25,9 @@ class SandboxFile(Base):
 
     __tablename__ = "sandbox_files"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True, native_uuid=False), primary_key=True, default=uuid.uuid4)
     organization_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -48,7 +48,7 @@ class SandboxFile(Base):
     virustotal_result = Column(JSON, nullable=True)
     metadata_extracted = Column(JSON, nullable=True)
 
-    submitted_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    submitted_by = Column(UUID(as_uuid=True, native_uuid=False), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     analyzed_at = Column(DateTime(timezone=True), nullable=True)
 

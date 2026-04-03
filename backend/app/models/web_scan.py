@@ -35,15 +35,15 @@ class WebScan(Base):
         Index("ix_web_scans_org_domain", "organization_id", "domain_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True, native_uuid=False), primary_key=True, default=uuid.uuid4)
     organization_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     domain_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("domains.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -74,15 +74,15 @@ class ScanFinding(Base):
 
     __tablename__ = "scan_findings"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True, native_uuid=False), primary_key=True, default=uuid.uuid4)
     scan_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("web_scans.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     organization_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

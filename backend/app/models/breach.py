@@ -23,9 +23,9 @@ class MonitoredEmail(Base):
         Index("ix_monitored_emails_org_hash", "organization_id", "email_hash", unique=True),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True, native_uuid=False), primary_key=True, default=uuid.uuid4)
     organization_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -53,15 +53,15 @@ class BreachRecord(Base):
 
     __tablename__ = "breach_records"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True, native_uuid=False), primary_key=True, default=uuid.uuid4)
     monitored_email_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("monitored_emails.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     organization_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

@@ -151,6 +151,11 @@ async def verify_domain(
             ),
         )
 
+    domain_obj.is_verified = True
+    db.add(domain_obj)
+    await db.commit()
+    await db.refresh(domain_obj)
+
     await audit(
         db,
         organization_id=current_org.id,

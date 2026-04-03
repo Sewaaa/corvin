@@ -22,7 +22,7 @@ class UserRole(str, enum.Enum):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    id = Column(UUID(as_uuid=True, native_uuid=False), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=True)
@@ -30,7 +30,7 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.ANALYST, nullable=False)
 
     organization_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True, native_uuid=False),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

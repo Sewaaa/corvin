@@ -52,8 +52,9 @@ async def _seed_notification(client, token: str, db_session) -> str:
     from app.models.user import User
 
     # Ricava org_id dall'utente
+    import uuid as _uuid
     user_resp = await client.get("/api/v1/auth/me", headers=auth_headers(token))
-    org_id = user_resp.json()["organization_id"]
+    org_id = _uuid.UUID(user_resp.json()["organization_id"])
 
     notif = Notification(
         organization_id=org_id,
@@ -124,8 +125,9 @@ async def test_deduplication_prevents_duplicate(client, db_session):
         "full_name": "Notif Dedup",
         "organization_name": "Notif Dedup Org",
     })
+    import uuid as _uuid
     user_resp = await client.get("/api/v1/auth/me", headers=auth_headers(token))
-    org_id = user_resp.json()["organization_id"]
+    org_id = _uuid.UUID(user_resp.json()["organization_id"])
 
     n1 = await create_notification(
         db_session,
@@ -164,8 +166,9 @@ async def test_different_dedup_keys_both_created(client, db_session):
         "full_name": "Notif Dedup2",
         "organization_name": "Notif Dedup2 Org",
     })
+    import uuid as _uuid
     user_resp = await client.get("/api/v1/auth/me", headers=auth_headers(token))
-    org_id = user_resp.json()["organization_id"]
+    org_id = _uuid.UUID(user_resp.json()["organization_id"])
 
     n1 = await create_notification(
         db_session,
