@@ -211,7 +211,7 @@ class RateLimitedClient:
             timeout=REQUEST_TIMEOUT,
             follow_redirects=True,
             headers={"User-Agent": SCANNER_UA},
-            verify=False,  # Necessario per scan su cert scaduti
+            verify=False,  # nosec B501 — intentional: scanner must reach sites with expired certs
         )
 
     async def get(self, path: str) -> Optional[httpx.Response]:

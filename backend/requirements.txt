@@ -35,7 +35,7 @@ aiohttp==3.9.5
 # Email / DNS
 dnspython==2.6.1
 python-whois==0.9.4
-checkdmarc==4.6.7
+checkdmarc==5.14.1
 
 # File analysis
 python-magic==0.4.27

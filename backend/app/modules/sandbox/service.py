@@ -251,7 +251,7 @@ def get_stored_path(file_id: uuid.UUID, extension: str = "") -> str:
 
 def compute_hashes(data: bytes) -> Tuple[str, str]:
     """Restituisce (md5_hex, sha256_hex)."""
-    md5 = hashlib.md5(data).hexdigest()
+    md5 = hashlib.md5(data, usedforsecurity=False).hexdigest()  # nosec B324
     sha256 = hashlib.sha256(data).hexdigest()
     return md5, sha256
 
