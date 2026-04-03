@@ -1,5 +1,7 @@
 # Corvin
 
+![CI](https://github.com/Sewaaa/corvus/actions/workflows/ci.yml/badge.svg)
+
 > **Silent guardian for your digital perimeter.**
 
 Corvin is a SaaS cybersecurity platform that gives SMBs enterprise-grade protection without the enterprise complexity. It monitors email threats, data breaches, domain reputation, web vulnerabilities, and suspicious files — all from a single dashboard.
@@ -18,6 +20,7 @@ Named after *corvus* (Latin: raven) — a symbol of intelligence and foreknowled
 | **Web Scanner** | Passive vulnerability scanner — security headers, exposed files, outdated CMS detection |
 | **File Sandbox** | Static analysis with YARA rules, VirusTotal hash lookup, macro extraction |
 | **Notifications** | Multi-channel alerting with severity-based routing and smart deduplication |
+| **Reports** | Aggregated security posture summary with one-click PDF export |
 
 ---
 
@@ -31,6 +34,20 @@ Multi-tenant SaaS with PostgreSQL row-level security. No tenant ever sees anothe
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for the full component diagram and data flow.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Backend** | Python 3.12, FastAPI, SQLAlchemy 2.0 (async), Alembic |
+| **Workers** | Celery 5, Redis 7 (broker + result backend), Celery Beat |
+| **Database** | PostgreSQL 16 (multi-tenant, row-level isolation) |
+| **Frontend** | React 18, Vite, Tailwind CSS, react-router-dom v6 |
+| **Security** | bcrypt, TOTP MFA, Fernet encryption, HMAC-SHA256 webhooks |
+| **Analysis** | YARA rules, VirusTotal API, Shannon entropy, Levenshtein distance |
+| **CI/CD** | GitHub Actions — Bandit SAST, pip-audit, pytest (60% coverage gate) |
 
 ---
 
@@ -58,7 +75,7 @@ docker-compose up -d
 ### 3. Run database migrations
 
 ```bash
-docker-compose exec api alembic upgrade head
+docker-compose exec corvin-api alembic upgrade head
 ```
 
 ### 4. Access
@@ -106,13 +123,13 @@ See [`docs/threat-model.md`](docs/threat-model.md) for the full STRIDE analysis.
 
 ```bash
 # Run tests
-docker-compose exec api pytest
+docker-compose exec corvin-api pytest
 
 # Run SAST scan
-docker-compose exec api bandit -r app/
+docker-compose exec corvin-api bandit -r app/
 
 # Check dependencies for vulnerabilities
-docker-compose exec api pip-audit
+docker-compose exec corvin-api pip-audit
 ```
 
 ---

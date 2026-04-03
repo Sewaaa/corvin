@@ -1,0 +1,16 @@
+[bandit]
+# Exclude test directory — tests intentionally contain hardcoded values,
+# assert statements and other patterns that Bandit flags as low-severity.
+exclude_dirs = tests,alembic
+
+# Skip checks that generate excessive false positives in this codebase:
+#
+#   B101 - assert_used         : asserts are intentional in tests
+#   B311 - random             : we use secrets.token_hex / uuid4 for crypto,
+#                               random is only used in non-security contexts
+#   B608 - hardcoded_sql      : all queries use SQLAlchemy ORM, not raw SQL
+skips = B101,B311,B608
+
+# Report MEDIUM+ severity only (LOW is too noisy for CI gates)
+level = MEDIUM
+confidence = MEDIUM

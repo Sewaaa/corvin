@@ -1,111 +1,96 @@
 # Corvin — Architecture
 
-## Overview
-
-Corvin is a multi-tenant SaaS platform. All data is isolated at the database level using `organization_id` scoping on every table, enforced by:
-
-1. A SQLAlchemy convention: every query includes `.where(Model.organization_id == current_org_id)`
-2. `TenantIsolationMiddleware` in the API layer that extracts `org_id` from the JWT and attaches it to `request.state`
-
-No raw SQL is used anywhere. Tenant cross-contamination is structurally prevented.
-
-## Component Diagram
+## High-Level Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Docker Network (corvin-net)          │
-│                                                             │
-│  ┌──────────────┐   /api/*   ┌──────────────────────────┐  │
-│  │   Frontend   │ ─────────▶ │       corvin-api          │  │
-│  │  React/Vite  │            │       FastAPI             │  │
-│  │  :3000       │            │       :8000               │  │
-│  └──────────────┘            └────────────┬─────────────┘  │
-│                                           │                 │
-│                              ┌────────────▼─────────────┐  │
-│                              │       PostgreSQL 16       │  │
-│                              │       corvin-db :5432     │  │
-│                              └──────────────────────────┘  │
-│                                           │                 │
-│                              ┌────────────▼─────────────┐  │
-│                              │       Redis 7             │  │
-│                              │       corvin-redis :6379  │  │
-│                              └────────────┬─────────────┘  │
-│                                           │                 │
-│                  ┌────────────────────────┤                 │
-│                  ▼                        ▼                 │
-│  ┌───────────────────────┐  ┌───────────────────────────┐  │
-│  │    corvin-worker      │  │    corvin-beat            │  │
-│  │    Celery Worker      │  │    Celery Beat Scheduler  │  │
-│  └───────────────────────┘  └───────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+ ┌──────────────────────────────────────────────────────────────────────┐
+ │                         CORVIN PLATFORM                              │
+ │                                                                      │
+ │  ┌───────────────┐     HTTPS      ┌──────────────────────────────┐  │
+ │  │  React 18 +   │ ─────────────► │   FastAPI (Python 3.12)      │  │
+ │  │  Vite +       │ ◄───────────── │   Uvicorn ASGI  /api/v1/*    │  │
+ │  │  Tailwind CSS │    JSON / PDF  │                              │  │
+ │  └───────────────┘                └──────────┬───────────────────┘  │
+ │                                              │                      │
+ │                               ┌─────────────┼─────────────┐        │
+ │                               ▼             ▼             ▼        │
+ │                     ┌──────────────┐ ┌──────────┐ ┌────────────┐   │
+ │                     │ PostgreSQL 16│ │ Redis 7  │ │  Celery    │   │
+ │                     │ (async ORM)  │ │ (broker) │ │  Workers   │   │
+ │                     │ Multi-tenant │ │          │ │  + Beat    │   │
+ │                     └──────────────┘ └──────────┘ └─────┬──────┘   │
+ │                                                          │          │
+ │                                   ┌──────────────────────┤          │
+ │                                   ▼                      ▼          │
+ │                            ┌────────────┐         ┌───────────┐    │
+ │                            │ External   │         │  Upload   │    │
+ │                            │ APIs:      │         │  Storage  │    │
+ │                            │ HIBP, VT,  │         │ /uploads  │    │
+ │                            │ DNS, SMTP  │         └───────────┘    │
+ │                            └────────────┘                          │
+ └──────────────────────────────────────────────────────────────────────┘
 ```
 
-## Services
+## Docker Compose Services
 
-| Service | Image | Purpose |
-|---------|-------|---------|
-| `corvin-api` | `./backend` | FastAPI REST API, handles auth + all module endpoints |
-| `corvin-worker` | `./backend` | Celery worker, processes async scan/check tasks |
-| `corvin-beat` | `./backend` | Celery Beat, schedules recurring tasks (daily breach checks, etc.) |
-| `corvin-db` | `postgres:16-alpine` | Primary datastore, multi-tenant via org_id scoping |
-| `corvin-redis` | `redis:7-alpine` | Celery broker + backend, rate-limit counters, session cache |
-| `corvin-frontend` | `./frontend` | React SPA, proxies `/api` to corvin-api |
+| Service | Image | Role |
+|---------|-------|------|
+| `corvin-db` | `postgres:16` | Primary datastore |
+| `corvin-redis` | `redis:7` | Celery broker + result backend |
+| `corvin-api` | Custom FastAPI | REST API, JWT auth, all endpoints |
+| `corvin-worker` | Custom Celery | Async task execution |
+| `corvin-beat` | Custom Celery Beat | Periodic task scheduler |
+| `corvin-frontend` | Custom Vite/Nginx | React SPA on port 3000 |
 
-## Data Flow — Breach Check Example
+---
 
-```
-User → POST /api/v1/breach/check
-  → TenantIsolationMiddleware extracts org_id from JWT
-  → BreachRouter validates payload (Pydantic)
-  → Enqueues Celery task: check_breaches.delay(org_id, email_hashes)
-  → Returns 202 Accepted
+## Multi-Tenant Architecture
 
-Celery Worker:
-  → Receives task
-  → For each email hash prefix: GET https://haveibeenpwned.com/range/{prefix}
-  → Parses response, compares suffix (k-anonymity — full hash never sent)
-  → Inserts BreachRecord rows (scoped by org_id)
-  → Triggers NotificationTask if new breach found
-  → Updates MonitoredEmail.last_checked
-```
+Every table has an `organization_id` FK. Isolation is enforced at two layers:
 
-## Tenant Isolation Model
+1. `TenantIsolationMiddleware`: extracts `org_id` from JWT → `request.state.organization_id`
+2. All ORM queries: `.where(Model.organization_id == current_org.id)`
 
-Every database table that holds customer data has an `organization_id` column (FK → `organizations.id`). The ORM layer is the primary enforcement point:
+Cross-tenant access returns `404` (not `403`) to prevent existence disclosure.
 
-```python
-# All queries must follow this pattern:
-result = await db.execute(
-    select(MonitoredEmail)
-    .where(MonitoredEmail.organization_id == current_org.id)
-)
-```
+---
 
-The `TenantIsolationMiddleware` provides defence-in-depth by parsing the JWT and populating `request.state.organization_id`, which endpoints use as the authoritative org identifier — never user-supplied query parameters.
-
-## Auth Flow
+## Authentication Flow
 
 ```
-POST /auth/register → bcrypt(password) → User row created, unverified
-POST /auth/login    → verify password → check MFA if enabled
-                    → access_token (15min JWT) + refresh_token (7d JWT)
-POST /auth/refresh  → validate refresh_token → rotate both tokens
-POST /auth/mfa/setup   → generate TOTP secret → return QR URI
-POST /auth/mfa/verify  → verify TOTP code → enable MFA on user
+POST /auth/login  →  access_token (JWT, 15 min) + refresh_token (7 days)
+GET /protected    →  TenantMiddleware → get_current_user → RBAC check
+POST /auth/refresh →  new access_token + rotated refresh_token
 ```
 
-Access tokens carry: `sub` (user_id), `org_id`, `role`, `type: "access"`.
+The frontend intercepts 401 responses, refreshes automatically, and retries.
 
-## Module Architecture
+---
 
-Each module under `backend/app/modules/` follows the same pattern:
+## Security Layers
 
-```
-modules/breach_monitor/
-├── __init__.py
-├── router.py      # FastAPI router, endpoints, request/response schemas
-├── service.py     # Business logic, DB operations
-└── tasks.py       # Celery tasks (async background jobs)
-```
+| Layer | Implementation |
+|-------|----------------|
+| Passwords | bcrypt cost 12 via passlib |
+| JWT | HS256, 15 min access tokens |
+| MFA | TOTP RFC 6238, QR provisioning |
+| Rate limiting | slowapi + Redis, 5/min on login |
+| IMAP passwords | Fernet-encrypted at rest |
+| Webhook secrets | Fernet + HMAC-SHA256 per payload |
+| HIBP | k-anonymity: 5-char SHA1 prefix, SHA-256 stored |
+| File upload | UUID filenames, MIME allowlist, 10 MB limit |
+| Web scanner | Passive only: 20 req max, 300 ms throttle |
+| Audit log | Append-only `audit_logs`, all mutations |
 
-This keeps concerns separated and makes each module independently testable.
+---
+
+## Celery Queues & Beat Schedule
+
+| Queue | Tasks |
+|-------|-------|
+| `breach` | `daily_breach_check_all_orgs` |
+| `domain` | `daily_domain_scan_all` |
+| `scanner` | `run_web_scan_task`, `scheduled_web_scans` (hourly) |
+| `email` | `scan_email_account_task`, `daily_email_scan_all_orgs` |
+| `sandbox` | `analyze_file_task` |
+| `notifications` | `dispatch_notification_task` |
