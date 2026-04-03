@@ -83,7 +83,7 @@ jobs:
 
     env:
       # Tests use SQLite in-memory — no real Postgres needed
-      DATABASE_URL: sqlite+aiosqlite:///:memory:
+      DATABASE_URL: "sqlite+aiosqlite:///:memory:"
       REDIS_URL: redis://localhost:6379/0
       SECRET_KEY: ci-test-secret-key-not-for-production-32chars
       ENVIRONMENT: testing
