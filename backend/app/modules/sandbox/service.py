@@ -187,9 +187,9 @@ rule Suspicious_Network_Indicators {
         severity = "high"
         category = "network"
     strings:
-        $ip_pattern = /\b(?:\d{1,3}\.){3}\d{1,3}:\d{2,5}\b/
+        $ip_pattern = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]+/
         $cmd_shell = "cmd.exe" nocase
-        $powershell_url = /https?:\/\/[^\s"']{10,}\.ps1/ nocase
+        $powershell_url = ".ps1" nocase
         $tor = ".onion" nocase
         $raw_socket = "socket.connect" nocase
     condition:

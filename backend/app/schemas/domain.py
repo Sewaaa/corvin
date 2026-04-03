@@ -1,6 +1,7 @@
 import re
 from datetime import date, datetime
 from typing import Dict, List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, field_validator
 
@@ -50,7 +51,7 @@ class DomainReport(BaseModel):
 
 
 class DomainResponse(BaseModel):
-    id: str
+    id: UUID
     domain: str
     is_verified: bool
     reputation_score: Optional[int] = None

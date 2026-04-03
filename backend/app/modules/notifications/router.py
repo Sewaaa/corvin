@@ -25,6 +25,7 @@ from app.models.notification import Notification, NotificationSeverity
 from app.models.organization import Organization
 from app.models.user import User
 from app.models.webhook_config import WebhookConfig
+from app.modules.notifications.service import send_webhook  # needed for test patching
 from app.schemas.notification import (
     NotificationListResponse,
     NotificationResponse,
@@ -64,6 +65,116 @@ async def _get_webhook_or_404(webhook_id: UUID, org_id: UUID, db: AsyncSession) 
     if wh is None:
         raise HTTPException(status_code=404, detail="Webhook non trovato")
     return wh
+
+
+# ---------------------------------------------------------------------------
+# Notification endpoints
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Webhook endpoints (must be registered BEFORE /{notification_id} to avoid
+# FastAPI matching "/webhooks" as a UUID path parameter)
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/webhooks",
+    response_model=List[WebhookResponse],
+    summary="Lista webhook configurati",
+    dependencies=[Depends(require_admin)],
+)
+async def list_webhooks(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    org: Organization = Depends(get_current_org),
+):
+    result = await db.execute(
+        select(WebhookConfig)
+        .where(WebhookConfig.organization_id == org.id)
+        .order_by(WebhookConfig.created_at.desc())
+    )
+    return result.scalars().all()
+
+
+@router.post(
+    "/webhooks",
+    response_model=WebhookResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Aggiunge un webhook",
+    dependencies=[Depends(require_admin)],
+)
+async def add_webhook(
+    body: WebhookCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    org: Organization = Depends(get_current_org),
+):
+    from app.modules.notifications.service import encrypt_secret
+
+    encrypted = encrypt_secret(body.secret) if body.secret else None
+    wh = WebhookConfig(
+        organization_id=org.id,
+        url=body.url,
+        encrypted_secret=encrypted,
+        events=body.events,
+        is_active=body.is_active,
+    )
+    db.add(wh)
+    await db.commit()
+    await db.refresh(wh)
+    logger.info("webhook_added", webhook_id=str(wh.id), org_id=str(org.id))
+    return wh
+
+
+@router.delete(
+    "/webhooks/{webhook_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Rimuove un webhook",
+    dependencies=[Depends(require_admin)],
+)
+async def delete_webhook(
+    webhook_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    org: Organization = Depends(get_current_org),
+):
+    wh = await _get_webhook_or_404(webhook_id, org.id, db)
+    await db.delete(wh)
+    await db.commit()
+
+
+@router.post(
+    "/webhooks/{webhook_id}/test",
+    status_code=status.HTTP_200_OK,
+    summary="Invia una notifica di test al webhook",
+    dependencies=[Depends(require_admin)],
+)
+async def test_webhook(
+    webhook_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    org: Organization = Depends(get_current_org),
+):
+    from app.models.notification import NotificationSeverity
+
+    wh = await _get_webhook_or_404(webhook_id, org.id, db)
+
+    test_notif = Notification(
+        organization_id=org.id,
+        title="Corvin Webhook Test",
+        message="Questa è una notifica di test dal sistema Corvin.",
+        severity=NotificationSeverity.INFO,
+        source_module="system",
+        source_id="webhook_test",
+    )
+    from datetime import datetime, timezone
+    test_notif.created_at = datetime.now(timezone.utc)
+
+    delivered = await send_webhook(test_notif, wh.url, wh.encrypted_secret)
+    return {
+        "delivered": delivered,
+        "webhook_id": str(webhook_id),
+        "url": wh.url,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -169,108 +280,3 @@ async def mark_all_read(
     return {"status": "ok", "message": "Tutte le notifiche sono state segnate come lette"}
 
 
-# ---------------------------------------------------------------------------
-# Webhook endpoints
-# ---------------------------------------------------------------------------
-
-@router.get(
-    "/webhooks",
-    response_model=List[WebhookResponse],
-    summary="Lista webhook configurati",
-    dependencies=[Depends(require_admin)],
-)
-async def list_webhooks(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-    org: Organization = Depends(get_current_org),
-):
-    result = await db.execute(
-        select(WebhookConfig)
-        .where(WebhookConfig.organization_id == org.id)
-        .order_by(WebhookConfig.created_at.desc())
-    )
-    return result.scalars().all()
-
-
-@router.post(
-    "/webhooks",
-    response_model=WebhookResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Aggiunge un webhook",
-    dependencies=[Depends(require_admin)],
-)
-async def add_webhook(
-    body: WebhookCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-    org: Organization = Depends(get_current_org),
-):
-    from app.modules.notifications.service import encrypt_secret
-
-    encrypted = encrypt_secret(body.secret) if body.secret else None
-    wh = WebhookConfig(
-        organization_id=org.id,
-        url=body.url,
-        encrypted_secret=encrypted,
-        events=body.events,
-        is_active=body.is_active,
-    )
-    db.add(wh)
-    await db.commit()
-    await db.refresh(wh)
-    logger.info("webhook_added", webhook_id=str(wh.id), org_id=str(org.id))
-    return wh
-
-
-@router.delete(
-    "/webhooks/{webhook_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Rimuove un webhook",
-    dependencies=[Depends(require_admin)],
-)
-async def delete_webhook(
-    webhook_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-    org: Organization = Depends(get_current_org),
-):
-    wh = await _get_webhook_or_404(webhook_id, org.id, db)
-    await db.delete(wh)
-    await db.commit()
-
-
-@router.post(
-    "/webhooks/{webhook_id}/test",
-    status_code=status.HTTP_200_OK,
-    summary="Invia una notifica di test al webhook",
-    dependencies=[Depends(require_admin)],
-)
-async def test_webhook(
-    webhook_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-    org: Organization = Depends(get_current_org),
-):
-    from app.models.notification import NotificationSeverity
-    from app.modules.notifications.service import create_notification, send_webhook
-
-    wh = await _get_webhook_or_404(webhook_id, org.id, db)
-
-    # Crea notifica temporanea in memoria (non persistita) per il test
-    test_notif = Notification(
-        organization_id=org.id,
-        title="Corvin Webhook Test",
-        message="Questa è una notifica di test dal sistema Corvin.",
-        severity=NotificationSeverity.INFO,
-        source_module="system",
-        source_id="webhook_test",
-    )
-    from datetime import datetime, timezone
-    test_notif.created_at = datetime.now(timezone.utc)
-
-    delivered = await send_webhook(test_notif, wh.url, wh.encrypted_secret)
-    return {
-        "delivered": delivered,
-        "webhook_id": str(webhook_id),
-        "url": wh.url,
-    }

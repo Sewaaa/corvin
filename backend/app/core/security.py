@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
@@ -38,6 +39,7 @@ def _build_token(data: Dict[str, Any], expires_delta: timedelta, token_type: str
             "iat": now,
             "exp": now + expires_delta,
             "type": token_type,
+            "jti": str(uuid.uuid4()),  # unique per-token ID ensures tokens always differ
         }
     )
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)

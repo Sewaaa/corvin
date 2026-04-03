@@ -1,5 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, field_validator
 
@@ -32,12 +33,12 @@ class BreachCheckResponse(BaseModel):
 
 
 class MonitoredEmailResponse(BaseModel):
-    id: str
+    id: UUID
     email_masked: str
     is_breached: bool
-    breach_count: int
-    last_checked: Optional[str] = None
-    created_at: str
+    breach_count: int = 0
+    last_checked: Optional[datetime] = None
+    created_at: datetime
 
     model_config = {"from_attributes": True}
 
