@@ -43,6 +43,7 @@ MAX_REQUESTS_PER_SCAN = 20  # Hard cap per evitare DoS accidentali
 
 SECURITY_HEADERS: List[Dict[str, Any]] = [
     {
+        "type": "missing_hsts",
         "header": "Strict-Transport-Security",
         "category": "security_headers",
         "severity": "high",
@@ -52,6 +53,7 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "check": lambda v: v is None,
     },
     {
+        "type": "missing_csp",
         "header": "Content-Security-Policy",
         "category": "security_headers",
         "severity": "high",
@@ -61,6 +63,7 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "check": lambda v: v is None,
     },
     {
+        "type": "missing_x_frame_options",
         "header": "X-Frame-Options",
         "category": "security_headers",
         "severity": "medium",
@@ -70,6 +73,7 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "check": lambda v: v is None,
     },
     {
+        "type": "missing_x_content_type_options",
         "header": "X-Content-Type-Options",
         "category": "security_headers",
         "severity": "medium",
@@ -79,6 +83,7 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "check": lambda v: v is None,
     },
     {
+        "type": "missing_referrer_policy",
         "header": "Referrer-Policy",
         "category": "security_headers",
         "severity": "low",
@@ -88,6 +93,7 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "check": lambda v: v is None,
     },
     {
+        "type": "missing_permissions_policy",
         "header": "Permissions-Policy",
         "category": "security_headers",
         "severity": "low",
@@ -97,6 +103,7 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "check": lambda v: v is None,
     },
     {
+        "type": "server_header_disclosure",
         "header": "Server",
         "category": "security_headers",
         "severity": "info",
@@ -108,6 +115,7 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         ),
     },
     {
+        "type": "x_powered_by_disclosure",
         "header": "X-Powered-By",
         "category": "security_headers",
         "severity": "info",
@@ -243,6 +251,7 @@ def check_security_headers(response: httpx.Response) -> List[Dict]:
         value = headers_lower.get(header_lower)
         if check["check"](value):
             findings.append({
+                "type": check["type"],
                 "category": check["category"],
                 "severity": check["severity"],
                 "title": check["title"],

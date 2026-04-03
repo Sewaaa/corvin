@@ -152,7 +152,7 @@ rule JS_Obfuscation {
         $unescape = /unescape\s*\(/ nocase
         $fromcharcode = "fromCharCode" nocase
         $atob = /atob\s*\(/ nocase
-        $hex_str = /\\x[0-9a-fA-F]{2}/ nocase
+        $hex_str = "\\x"
     condition:
         3 of them
 }
