@@ -59,7 +59,7 @@ services:
     dockerfilePath: ./backend/Dockerfile.prod
     dockerContext: ./backend
     plan: free
-    startCommand: celery -A app.tasks.celery_app worker --loglevel=info --queues=breach,domain,scanner,sandbox,email,notifications,celery --concurrency=2
+    dockerCommand: celery -A app.tasks.celery_app worker --loglevel=info --queues=breach,domain,scanner,sandbox,email,notifications,celery --concurrency=2
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -98,7 +98,7 @@ services:
     dockerfilePath: ./backend/Dockerfile.prod
     dockerContext: ./backend
     plan: free
-    startCommand: celery -A app.tasks.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    dockerCommand: celery -A app.tasks.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
     envVars:
       - key: ENVIRONMENT
         value: production
