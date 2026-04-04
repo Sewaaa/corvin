@@ -1,0 +1,111 @@
+services:
+  corvin-db:
+    image: postgres:16-alpine
+    container_name: corvin-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-corvin}
+      POSTGRES_USER: ${POSTGRES_USER:-corvin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - corvin-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-corvin} -d ${POSTGRES_DB:-corvin}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - corvin-net
+    restart: unless-stopped
+
+  corvin-redis:
+    image: redis:7-alpine
+    container_name: corvin-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-changeme}
+    volumes:
+      - corvin-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - corvin-net
+    restart: unless-stopped
+
+  corvin-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: corvin-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      corvin-db:
+        condition: service_healthy
+      corvin-redis:
+        condition: service_healthy
+    env_file:
+      - .env.prod
+    volumes:
+      - corvin-uploads:/app/uploads
+    networks:
+      - corvin-net
+    restart: unless-stopped
+
+  corvin-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: corvin-worker
+    command: celery -A app.tasks.celery_app worker --loglevel=info --queues=breach,domain,scanner,sandbox,email,notifications,celery --concurrency=4
+    depends_on:
+      corvin-db:
+        condition: service_healthy
+      corvin-redis:
+        condition: service_healthy
+    env_file:
+      - .env.prod
+    volumes:
+      - corvin-uploads:/app/uploads
+    networks:
+      - corvin-net
+    restart: unless-stopped
+
+  corvin-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: corvin-beat
+    command: celery -A app.tasks.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      corvin-db:
+        condition: service_healthy
+      corvin-redis:
+        condition: service_healthy
+    env_file:
+      - .env.prod
+    networks:
+      - corvin-net
+    restart: unless-stopped
+
+  corvin-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: corvin-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - corvin-api
+    networks:
+      - corvin-net
+    restart: unless-stopped
+
+volumes:
+  corvin-pgdata:
+  corvin-redis:
+  corvin-uploads:
+
+networks:
+  corvin-net:
+    driver: bridge
