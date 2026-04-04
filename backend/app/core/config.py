@@ -1,6 +1,8 @@
+import json
 from functools import lru_cache
 from typing import List
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -10,6 +12,16 @@ class Settings(BaseSettings):
     environment: str = "development"
     log_level: str = "INFO"
     allowed_origins: List[str] = ["http://localhost:3000"]
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_origins(cls, v: object) -> object:
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("["):
+                return json.loads(v)
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v
 
     # Database
     database_url: str = "postgresql+asyncpg://corvin:changeme@localhost:5432/corvin"
