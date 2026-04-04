@@ -32,7 +32,6 @@ services:
         value: /app/uploads
       - key: SMTP_PORT
         value: "587"
-      # Questi vanno inseriti manualmente dalla dashboard Render:
       - key: REDIS_URL
         sync: false
       - key: ALLOWED_ORIGINS
@@ -56,10 +55,9 @@ services:
   - type: worker
     name: corvin-worker
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile.prod
+    dockerfilePath: ./backend/Dockerfile.worker
     dockerContext: ./backend
     plan: free
-    dockerCommand: celery -A app.tasks.celery_app worker --loglevel=info --queues=breach,domain,scanner,sandbox,email,notifications,celery --concurrency=2
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -68,10 +66,7 @@ services:
           name: corvin-db
           property: connectionString
       - key: SECRET_KEY
-        fromService:
-          type: web
-          name: corvin-api
-          envVarKey: SECRET_KEY
+        sync: false
       - key: SMTP_PORT
         value: "587"
       - key: REDIS_URL
@@ -95,10 +90,9 @@ services:
   - type: worker
     name: corvin-beat
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile.prod
+    dockerfilePath: ./backend/Dockerfile.beat
     dockerContext: ./backend
     plan: free
-    dockerCommand: celery -A app.tasks.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -107,10 +101,7 @@ services:
           name: corvin-db
           property: connectionString
       - key: SECRET_KEY
-        fromService:
-          type: web
-          name: corvin-api
-          envVarKey: SECRET_KEY
+        sync: false
       - key: REDIS_URL
         sync: false
 
@@ -130,7 +121,6 @@ services:
         name: Cache-Control
         value: public, max-age=31536000, immutable
     envVars:
-      # Inserire manualmente: https://corvin-api.onrender.com/api/v1
       - key: VITE_API_BASE_URL
         sync: false
 
