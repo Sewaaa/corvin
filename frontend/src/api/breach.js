@@ -1,9 +1,8 @@
 import { api } from './client';
 
 export const breach = {
-  list: () => api.get('/breach/'),
-  add: (email) => api.post('/breach/', { email }),
-  check: (id) => api.post(`/breach/${id}/check`),
-  remove: (id) => api.delete(`/breach/${id}`),
-  results: (id) => api.get(`/breach/${id}/results`),
+  list: () => api.get('/breach/emails'),
+  add: (email) => api.post('/breach/check', { emails: [email] }),
+  checkAll: (emails) => api.post('/breach/check', { emails }),
+  remove: (id) => api.delete(`/breach/emails/${id}`),
 };

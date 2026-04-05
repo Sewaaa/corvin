@@ -10,32 +10,22 @@ export default function BreachMonitor() {
   const [newEmail, setNewEmail] = useState('');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
-  const [checkingId, setCheckingId] = useState(null);
+  const [addResult, setAddResult] = useState(null);
 
   const handleAdd = async (e) => {
     e.preventDefault();
     setAddError('');
+    setAddResult(null);
     setAdding(true);
     try {
-      await breach.add(newEmail);
+      const results = await breach.add(newEmail);
       setNewEmail('');
+      setAddResult(results?.[0] ?? null);
       refetch();
     } catch (err) {
-      setAddError(err.message);
+      setAddError('Errore durante la verifica. Riprova più tardi.');
     } finally {
       setAdding(false);
-    }
-  };
-
-  const handleCheck = async (id) => {
-    setCheckingId(id);
-    try {
-      await breach.check(id);
-      refetch();
-    } catch {
-      // ignore
-    } finally {
-      setCheckingId(null);
     }
   };
 
@@ -55,10 +45,10 @@ export default function BreachMonitor() {
       </div>
 
       {/* Add email form */}
-      <form onSubmit={handleAdd} className="flex gap-3 mb-6">
+      <form onSubmit={handleAdd} className="flex gap-3 mb-3">
         <input
           type="email"
-          placeholder="email@company.com"
+          placeholder="email@example.com"
           value={newEmail}
           onChange={(e) => setNewEmail(e.target.value)}
           required
@@ -69,10 +59,19 @@ export default function BreachMonitor() {
           disabled={adding}
           className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg hover:bg-corvin-accent/90 disabled:opacity-50"
         >
-          {adding ? 'Aggiunta…' : '+ Aggiungi'}
+          {adding ? 'Verifica in corso…' : 'Aggiungi e verifica'}
         </button>
       </form>
+
       {addError && <p className="text-red-400 text-sm mb-4">{addError}</p>}
+
+      {addResult && (
+        <div className={`mb-4 p-3 rounded-lg text-sm ${addResult.is_breached ? 'bg-red-900/30 border border-red-700 text-red-300' : 'bg-green-900/30 border border-green-700 text-green-300'}`}>
+          {addResult.is_breached
+            ? `⚠ ${addResult.email_masked} trovata in ${addResult.breach_count} breach.`
+            : `✓ ${addResult.email_masked} non trovata in nessuna breach nota.`}
+        </div>
+      )}
 
       {loading && <LoadingSpinner />}
       {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -91,34 +90,27 @@ export default function BreachMonitor() {
               <tr className="border-b border-corvin-700 text-gray-400 text-xs uppercase">
                 <th className="text-left px-4 py-3">Email</th>
                 <th className="text-left px-4 py-3">Ultima verifica</th>
-                <th className="text-left px-4 py-3">Breaches</th>
+                <th className="text-left px-4 py-3">Stato</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {emails.map((em) => (
                 <tr key={em.id} className="border-b border-corvin-700/50 hover:bg-corvin-700/30">
-                  <td className="px-4 py-3 text-white">{em.email}</td>
+                  <td className="px-4 py-3 text-white">{em.email_masked}</td>
                   <td className="px-4 py-3 text-gray-400">
-                    {em.last_checked_at
-                      ? new Date(em.last_checked_at).toLocaleDateString('it-IT')
+                    {em.last_checked
+                      ? new Date(em.last_checked).toLocaleDateString('it-IT')
                       : '—'}
                   </td>
                   <td className="px-4 py-3">
-                    {em.breach_count > 0 ? (
+                    {em.is_breached ? (
                       <SeverityBadge value={`${em.breach_count} breach`} />
                     ) : (
                       <SeverityBadge value="safe" />
                     )}
                   </td>
                   <td className="px-4 py-3 flex gap-2 justify-end">
-                    <button
-                      onClick={() => handleCheck(em.id)}
-                      disabled={checkingId === em.id}
-                      className="text-xs text-corvin-accent hover:underline disabled:opacity-50"
-                    >
-                      {checkingId === em.id ? 'Verifica…' : 'Verifica'}
-                    </button>
                     <button
                       onClick={() => handleDelete(em.id)}
                       className="text-xs text-red-400 hover:underline"
