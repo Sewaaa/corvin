@@ -24,6 +24,7 @@ export default function DomainReputation() {
   const [addError, setAddError] = useState('');
   const [busyId, setBusyId] = useState(null);
   const [actionError, setActionError] = useState('');
+  const [scanningId, setScanningId] = useState(null);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -55,10 +56,29 @@ export default function DomainReputation() {
     'Verification failed': 'Verifica fallita. Assicurati di aver aggiunto il record TXT al DNS del dominio. La propagazione DNS può richiedere fino a 48 ore.',
     'not found': 'Dominio non trovato.',
   });
-  const handleScan = action(domainApi.scan, {
-    'must be verified': 'Devi prima verificare il dominio prima di poterlo scansionare.',
-    'not found': 'Dominio non trovato.',
-  });
+  const handleScan = async (id) => {
+    setBusyId(id);
+    setScanningId(id);
+    setActionError('');
+    try {
+      await domainApi.scan(id);
+      // scan runs in background — wait 3s then refetch
+      await new Promise((r) => setTimeout(r, 3000));
+      await refetch();
+    } catch (err) {
+      const msg = err.message ?? '';
+      if (msg.toLowerCase().includes('must be verified')) {
+        setActionError('Devi prima verificare il dominio prima di poterlo scansionare.');
+      } else if (msg.toLowerCase().includes('not found')) {
+        setActionError('Dominio non trovato.');
+      } else {
+        setActionError('Si è verificato un errore. Riprova più tardi.');
+      }
+    } finally {
+      setBusyId(null);
+      setScanningId(null);
+    }
+  };
   const handleDelete = async (id) => {
     if (!confirm('Rimuovere questo dominio?')) return;
     action(domainApi.remove)(id);
@@ -138,7 +158,7 @@ export default function DomainReputation() {
                       disabled={busyId === d.id}
                       className="text-xs text-corvin-accent hover:underline disabled:opacity-50"
                     >
-                      {busyId === d.id ? 'Scansione…' : 'Scansiona'}
+                      {scanningId === d.id ? 'Scansione in corso…' : 'Scansiona'}
                     </button>
                   )}
                   <button
