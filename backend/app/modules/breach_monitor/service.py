@@ -189,6 +189,9 @@ async def check_email_for_breaches(
             new_count=new_count,
         )
 
+    # Flush so the router can read the newly added BreachRecord rows
+    await db.flush()
+
     return new_count, len(hibp_breaches)
 
 
