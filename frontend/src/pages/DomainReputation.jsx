@@ -63,7 +63,7 @@ export default function DomainReputation() {
     try {
       await domainApi.scan(id);
       // scan runs in background — wait 3s then refetch
-      await new Promise((r) => setTimeout(r, 3000));
+      await new Promise((r) => setTimeout(r, 6000));
       await refetch();
     } catch (err) {
       const msg = err.message ?? '';
@@ -141,6 +141,11 @@ export default function DomainReputation() {
                       TXT: <code className="text-yellow-400">corvin-verify={d.verification_token}</code>
                     </p>
                   )}
+                  {d.last_scan_at && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ultima scan: {new Date(d.last_scan_at).toLocaleString('it-IT')}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
                   {!d.is_verified && (
@@ -169,6 +174,16 @@ export default function DomainReputation() {
                   </button>
                 </div>
               </div>
+              {d.scan_findings?.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-corvin-700 space-y-1">
+                  {d.scan_findings.map((f, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs">
+                      <SeverityBadge value={f.severity} />
+                      <span className="text-gray-300">{f.title ?? f.message ?? f.check}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
