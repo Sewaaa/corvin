@@ -63,24 +63,19 @@ async def _query_hibp_breaches(email: str) -> List[dict]:
             resp.raise_for_status()
             data = resp.json()
 
-            # Mappa risposta XposedOrNot → formato interno
-            details = (
-                data.get("breaches", {}).get("breaches_details", [])
-                or data.get("exposures", {}).get("breaches", [])
-                or []
-            )
-            results = []
-            for b in details:
-                if isinstance(b, dict):
-                    raw_data = b.get("xposed_data", "")
-                    data_classes = [d.strip() for d in raw_data.split(";")] if raw_data else []
-                    results.append({
-                        "Name": b.get("breach", "Unknown"),
-                        "BreachDate": b.get("xposed_date"),
-                        "DataClasses": data_classes,
-                        "Description": b.get("references", ""),
-                    })
-            return results
+            # Formato XposedOrNot: {"breaches": [["Name1","Name2",...]], "status": "..."}
+            raw = data.get("breaches", [])
+            breach_names: List[str] = []
+            for item in raw:
+                if isinstance(item, list):
+                    breach_names.extend([n for n in item if isinstance(n, str)])
+                elif isinstance(item, str):
+                    breach_names.append(item)
+
+            return [
+                {"Name": name, "BreachDate": None, "DataClasses": [], "Description": ""}
+                for name in breach_names
+            ]
     except httpx.HTTPError as exc:
         logger.error("xon_request_failed", error=str(exc))
         return []
