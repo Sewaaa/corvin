@@ -28,7 +28,7 @@ from app.models.notification import Notification, NotificationSeverity
 
 logger = structlog.get_logger(__name__)
 
-HIBP_BASE = "https://haveibeenpwned.com/api/v3"
+XON_BASE = "https://api.xposedornot.com/v1"
 
 
 def _mask_email(email: str) -> str:
@@ -45,33 +45,44 @@ def _sha256_email(email: str) -> str:
 
 async def _query_hibp_breaches(email: str) -> List[dict]:
     """
-    Interroga HIBP per le breach dell'email data.
-    L'API key viene inclusa nell'header — non nell'URL.
-    Restituisce [] in caso di errore o assenza di API key.
+    Interroga XposedOrNot per le breach dell'email data (gratuito, no API key).
+    Mappa la risposta nel formato interno compatibile con HIBP.
+    Restituisce [] se nessuna breach trovata o in caso di errore.
     """
-    if not settings.hibp_api_key:
-        logger.warning("hibp_api_key_not_configured_skipping_check")
-        return []
-
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
-                f"{HIBP_BASE}/breachedaccount/{email}",
-                headers={
-                    "user-agent": "Corvin-BreachMonitor/1.0",
-                    "hibp-api-key": settings.hibp_api_key,
-                },
-                params={"truncateResponse": "false"},
+                f"{XON_BASE}/check-email/{email}",
+                headers={"user-agent": "Corvin-BreachMonitor/1.0"},
             )
             if resp.status_code == 404:
-                return []  # Nessuna breach trovata per questa email
+                return []  # Nessuna breach trovata
             if resp.status_code == 429:
-                logger.warning("hibp_rate_limited")
+                logger.warning("xon_rate_limited")
                 return []
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()
+
+            # Mappa risposta XposedOrNot → formato interno
+            details = (
+                data.get("breaches", {}).get("breaches_details", [])
+                or data.get("exposures", {}).get("breaches", [])
+                or []
+            )
+            results = []
+            for b in details:
+                if isinstance(b, dict):
+                    raw_data = b.get("xposed_data", "")
+                    data_classes = [d.strip() for d in raw_data.split(";")] if raw_data else []
+                    results.append({
+                        "Name": b.get("breach", "Unknown"),
+                        "BreachDate": b.get("xposed_date"),
+                        "DataClasses": data_classes,
+                        "Description": b.get("references", ""),
+                    })
+            return results
     except httpx.HTTPError as exc:
-        logger.error("hibp_request_failed", error=str(exc))
+        logger.error("xon_request_failed", error=str(exc))
         return []
 
 
