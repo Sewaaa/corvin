@@ -109,7 +109,7 @@ services:
   - type: web
     name: corvin-frontend
     runtime: static
-    buildCommand: cd frontend && npm ci && npm run build
+    buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     pullRequestPreviewsEnabled: false
     routes:

@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql+asyncpg://corvin:changeme@localhost:5432/corvin"
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def ensure_async_driver(cls, v: object) -> object:
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
