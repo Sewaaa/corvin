@@ -86,13 +86,27 @@ async def list_monitored_emails(
     limit: int = 50,
 ) -> List[MonitoredEmailResponse]:
     """Lista di email monitorate per questa organizzazione (tenant-scoped)."""
+    from sqlalchemy import func
     if limit > 100:
         limit = 100
 
     emails, _total = await get_breach_history(
         db, organization_id=current_org.id, page=page, limit=limit
     )
-    return [MonitoredEmailResponse.model_validate(e) for e in emails]
+
+    # Count breach records per email
+    results = []
+    for e in emails:
+        count_q = await db.execute(
+            select(func.count(BreachRecord.id)).where(
+                BreachRecord.monitored_email_id == e.id
+            )
+        )
+        count = count_q.scalar_one()
+        item = MonitoredEmailResponse.model_validate(e)
+        item.breach_count = count
+        results.append(item)
+    return results
 
 
 @router.post("/check", response_model=List[BreachCheckResponse])

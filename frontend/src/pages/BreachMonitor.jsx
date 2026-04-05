@@ -34,7 +34,9 @@ export default function BreachMonitor() {
     try {
       await breach.remove(id);
       refetch();
-    } catch {}
+    } catch (err) {
+      alert('Errore durante la rimozione. Riprova più tardi.');
+    }
   };
 
   return (
