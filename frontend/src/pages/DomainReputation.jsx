@@ -40,15 +40,25 @@ export default function DomainReputation() {
     }
   };
 
-  const action = (fn) => async (id) => {
+  const action = (fn, errorMap = {}) => async (id) => {
     setBusyId(id);
     setActionError('');
-    try { await fn(id); refetch(); } catch (err) { setActionError(err.message); }
+    try { await fn(id); refetch(); } catch (err) {
+      const msg = err.message ?? '';
+      const mapped = Object.entries(errorMap).find(([key]) => msg.toLowerCase().includes(key.toLowerCase()));
+      setActionError(mapped ? mapped[1] : 'Si è verificato un errore. Riprova più tardi.');
+    }
     finally { setBusyId(null); }
   };
 
-  const handleVerify = action(domainApi.verify);
-  const handleScan = action(domainApi.scan);
+  const handleVerify = action(domainApi.verify, {
+    'Verification failed': 'Verifica fallita. Assicurati di aver aggiunto il record TXT al DNS del dominio. La propagazione DNS può richiedere fino a 48 ore.',
+    'not found': 'Dominio non trovato.',
+  });
+  const handleScan = action(domainApi.scan, {
+    'must be verified': 'Devi prima verificare il dominio prima di poterlo scansionare.',
+    'not found': 'Dominio non trovato.',
+  });
   const handleDelete = async (id) => {
     if (!confirm('Rimuovere questo dominio?')) return;
     action(domainApi.remove)(id);
