@@ -101,7 +101,7 @@ app.add_middleware(TenantIsolationMiddleware)
 app.include_router(api_router, prefix="/api/v1")
 
 
-@app.get("/health", tags=["health"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["health"])
 async def health_check() -> dict:
     """Health check endpoint for load balancers and container orchestrators."""
     return {"status": "healthy", "service": "corvin-api"}
