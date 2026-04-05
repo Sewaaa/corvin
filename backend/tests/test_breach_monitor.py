@@ -5,6 +5,7 @@ Strategia: mock dell'API HIBP per evitare chiamate reali nei test.
 Verifica: k-anonymity (no email in chiaro salvata), logica di deduplicazione,
 tenant isolation, e risposta corretta degli endpoint.
 """
+import uuid as _uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,13 +16,6 @@ from app.modules.breach_monitor.service import _mask_email, _sha256_email
 # ---------------------------------------------------------------------------
 # Helper
 # ---------------------------------------------------------------------------
-
-REGISTER = {
-    "email": "breach-test@example.com",
-    "password": "BreachTest1!",
-    "full_name": "Breach Tester",
-    "organization_name": "Breach Test Org",
-}
 
 FAKE_HIBP_RESPONSE = [
     {
@@ -39,8 +33,18 @@ FAKE_HIBP_RESPONSE = [
 ]
 
 
+def _unique_register() -> dict:
+    uid = _uuid.uuid4().hex[:8]
+    return {
+        "email": f"breach-{uid}@example.com",
+        "password": "BreachTest1!",
+        "full_name": "Breach Tester",
+        "organization_name": f"Breach Org {uid}",
+    }
+
+
 async def register_and_get_token(client, payload=None) -> str:
-    p = payload or REGISTER
+    p = payload or _unique_register()
     resp = await client.post("/api/v1/auth/register", json=p)
     assert resp.status_code == 201
     return resp.json()["access_token"]
@@ -217,12 +221,7 @@ async def test_check_deduplicates_breaches(client):
 async def test_email_list_scoped_to_tenant(client):
     """Le email monitorate di org_A non devono essere visibili da org_B."""
     token_a = await register_and_get_token(client)
-    token_b = await register_and_get_token(client, {
-        "email": "orgb@example.com",
-        "password": "OrgBPass1!",
-        "full_name": "Org B User",
-        "organization_name": "Org B",
-    })
+    token_b = await register_and_get_token(client)
 
     # org_A aggiunge un'email
     await client.post(
@@ -242,12 +241,7 @@ async def test_email_list_scoped_to_tenant(client):
 async def test_cannot_delete_email_of_other_org(client):
     """org_A non può rimuovere un'email monitorata da org_B (→ 404)."""
     token_a = await register_and_get_token(client)
-    token_b = await register_and_get_token(client, {
-        "email": "orgb2@example.com",
-        "password": "OrgB2Pass1!",
-        "full_name": "Org B2 User",
-        "organization_name": "Org B2",
-    })
+    token_b = await register_and_get_token(client)
 
     # org_B aggiunge un'email e recupera il suo id
     add_resp = await client.post(
