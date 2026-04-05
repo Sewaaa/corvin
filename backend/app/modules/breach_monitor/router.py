@@ -73,6 +73,8 @@ async def add_emails(
     if skipped:
         logger.info("breach_emails_skipped_duplicates", count=len(skipped))
 
+    await db.commit()
+
     return [MonitoredEmailResponse.model_validate(m) for m in added]
 
 
@@ -175,6 +177,8 @@ async def check_breaches_now(
         ip_address=request.client.host if request.client else None,
         details={"email_count": len(payload.emails)},
     )
+
+    await db.commit()
 
     return results
 
