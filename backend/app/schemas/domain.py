@@ -54,9 +54,12 @@ class DomainResponse(BaseModel):
     id: UUID
     domain: str
     is_verified: bool
+    verification_token: Optional[str] = None
     reputation_score: Optional[int] = None
     is_blacklisted: bool
     ssl_expiry: Optional[date] = None
+    scan_findings: Optional[List[Dict]] = None
+    last_scan_at: Optional[datetime] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
