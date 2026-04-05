@@ -23,6 +23,7 @@ export default function DomainReputation() {
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const [actionError, setActionError] = useState('');
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -41,7 +42,8 @@ export default function DomainReputation() {
 
   const action = (fn) => async (id) => {
     setBusyId(id);
-    try { await fn(id); refetch(); } catch {}
+    setActionError('');
+    try { await fn(id); refetch(); } catch (err) { setActionError(err.message); }
     finally { setBusyId(null); }
   };
 
@@ -77,6 +79,7 @@ export default function DomainReputation() {
         </button>
       </form>
       {addError && <p className="text-red-400 text-sm mb-4">{addError}</p>}
+      {actionError && <p className="text-red-400 text-sm mb-4">{actionError}</p>}
 
       {loading && <LoadingSpinner />}
       {error && <p className="text-red-400 text-sm">{error}</p>}
