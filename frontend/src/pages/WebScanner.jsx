@@ -14,6 +14,7 @@ export default function WebScanner() {
   const [retryingId, setRetryingId] = useState(null);
   const [startError, setStartError] = useState('');
   const [detail, setDetail] = useState(null);
+  const [detailError, setDetailError] = useState('');
 
   const verifiedDomains = (domains ?? []).filter((d) => d.is_verified);
 
@@ -58,11 +59,14 @@ export default function WebScanner() {
   };
 
   const handleDetail = async (id) => {
-    if (detail?.id === id) { setDetail(null); return; }
+    if (detail?.id === id) { setDetail(null); setDetailError(''); return; }
+    setDetailError('');
     try {
       const d = await webScan.get(id);
       setDetail(d);
-    } catch {}
+    } catch (err) {
+      setDetailError(err.message ?? 'Errore nel caricamento dei dettagli.');
+    }
   };
 
   return (
@@ -93,6 +97,7 @@ export default function WebScanner() {
         </button>
       </form>
       {startError && <p className="text-red-400 text-sm mb-4">{startError}</p>}
+      {detailError && <p className="text-red-400 text-sm mb-4">⚠ {detailError}</p>}
 
       {loading && <LoadingSpinner />}
       {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -115,6 +120,9 @@ export default function WebScanner() {
                 <div className="flex items-center gap-3">
                   <SeverityBadge value={s.status} />
                   <span className="text-sm text-white">{s.target_url}</span>
+                  {s.status === 'failed' && (
+                    <span className="text-xs text-gray-500">sito non raggiungibile</span>
+                  )}
                   {(s.status === 'pending' || s.status === 'failed') && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleRetry(s); }}

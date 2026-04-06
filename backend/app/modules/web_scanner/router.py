@@ -153,11 +153,16 @@ async def get_scan(
 ):
     scan = await _get_scan_or_404(scan_id, org.id, db)
 
+    from app.schemas.web_scan import FindingResponse
+    import uuid as _uuid
+
     findings_result = await db.execute(
-        select(ScanFinding).where(ScanFinding.scan_id == scan.id)
+        select(ScanFinding).where(ScanFinding.scan_id == _uuid.UUID(str(scan.id)))
     )
     findings = findings_result.scalars().all()
     summary = _build_summary(findings)
+
+    findings_resp = [FindingResponse.model_validate(f, from_attributes=True) for f in findings]
 
     return ScanResultResponse(
         id=scan.id,
@@ -166,7 +171,7 @@ async def get_scan(
         domain_id=scan.domain_id,
         started_at=scan.started_at,
         completed_at=scan.completed_at,
-        findings=findings,
+        findings=findings_resp,
         summary=summary,
         created_at=scan.created_at,
     )
