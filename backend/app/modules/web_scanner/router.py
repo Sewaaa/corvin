@@ -80,7 +80,6 @@ async def start_scan(
     """
     from app.models.domain import Domain
     from app.modules.web_scanner.service import create_scan
-    from app.modules.web_scanner.tasks import run_web_scan_task
 
     # Verifica che il dominio appartenga all'org e sia verificato
     result = await db.execute(

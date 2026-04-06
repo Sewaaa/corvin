@@ -40,11 +40,40 @@ def configure_logging() -> None:
     )
 
 
+async def _reset_stuck_scans() -> None:
+    """
+    Al riavvio, reimposta a FAILED tutti gli scan rimasti in PENDING o RUNNING
+    da più di 10 minuti (task background non completati prima del deploy precedente).
+    """
+    from datetime import datetime, timedelta, timezone
+    from sqlalchemy import update
+    from app.core.database import AsyncSessionLocal
+    from app.models.web_scan import WebScan, ScanStatus
+
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
+    try:
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                update(WebScan)
+                .where(
+                    WebScan.status.in_([ScanStatus.PENDING, ScanStatus.RUNNING]),
+                    WebScan.created_at < cutoff,
+                )
+                .values(status=ScanStatus.FAILED)
+            )
+            if result.rowcount:
+                logger.warning("startup_reset_stuck_scans", count=result.rowcount)
+            await db.commit()
+    except Exception as exc:
+        logger.error("startup_reset_stuck_scans_failed", error=str(exc))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     configure_logging()
     logger.info("corvin_api_starting", environment=settings.environment)
-    # In production, run migrations via alembic before startup, not here
+    # Reset scan bloccati da deploy precedenti
+    await _reset_stuck_scans()
     yield
     logger.info("corvin_api_shutdown")
     await engine.dispose()

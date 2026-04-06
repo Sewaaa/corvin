@@ -29,29 +29,39 @@ def run_web_scan_task(self, scan_id: str) -> dict:
 
 
 async def _run_scan_async(scan_id: str) -> dict:
+    import uuid as _uuid
     from app.core.database import AsyncSessionLocal
     from app.models.web_scan import WebScan, ScanStatus
     from app.modules.web_scanner.service import run_web_scan
     from sqlalchemy import select
 
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(select(WebScan).where(WebScan.id == scan_id))
-        scan = result.scalar_one_or_none()
+    try:
+        logger.info("web_scan_bg_start", scan_id=scan_id)
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(WebScan).where(WebScan.id == _uuid.UUID(scan_id))
+            )
+            scan = result.scalar_one_or_none()
 
-        if scan is None:
-            return {"status": "not_found"}
+            if scan is None:
+                logger.error("web_scan_bg_not_found", scan_id=scan_id)
+                return {"status": "not_found"}
 
-        if scan.status not in (ScanStatus.PENDING, ScanStatus.FAILED):
-            return {"status": "skipped", "reason": f"scan is {scan.status}"}
+            if scan.status not in (ScanStatus.PENDING, ScanStatus.FAILED):
+                return {"status": "skipped", "reason": f"scan is {scan.status}"}
 
-        await run_web_scan(db, scan=scan)
-        await db.commit()
+            await run_web_scan(db, scan=scan)
+            await db.commit()
 
-        return {
-            "status": "completed",
-            "scan_id": scan_id,
-            "findings": scan.findings_count,
-        }
+            logger.info("web_scan_bg_done", scan_id=scan_id, findings=scan.findings_count)
+            return {
+                "status": "completed",
+                "scan_id": scan_id,
+                "findings": scan.findings_count,
+            }
+    except Exception as exc:
+        logger.error("web_scan_bg_failed", scan_id=scan_id, error=str(exc), exc_info=True)
+        return {"status": "error"}
 
 
 @celery_app.task(

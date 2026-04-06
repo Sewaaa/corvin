@@ -11,10 +11,20 @@ export default function WebScanner() {
   const { data: domains } = useApi(() => domainApi.list());
   const [selectedDomain, setSelectedDomain] = useState('');
   const [starting, setStarting] = useState(false);
+  const [retryingId, setRetryingId] = useState(null);
   const [startError, setStartError] = useState('');
   const [detail, setDetail] = useState(null);
 
   const verifiedDomains = (domains ?? []).filter((d) => d.is_verified);
+
+  const pollScanCompletion = async (scanId) => {
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const updated = await refetch();
+      const found = (updated ?? []).find((s) => s.id === scanId);
+      if (found && found.status !== 'pending' && found.status !== 'running') break;
+    }
+  };
 
   const handleStart = async (e) => {
     e.preventDefault();
@@ -22,12 +32,28 @@ export default function WebScanner() {
     setStartError('');
     setStarting(true);
     try {
-      await webScan.start(selectedDomain);
+      const newScan = await webScan.start(selectedDomain);
       refetch();
+      if (newScan?.id) await pollScanCompletion(newScan.id);
     } catch (err) {
-      setStartError(err.message);
+      setStartError(err.message ?? 'Errore durante l\'avvio della scansione. Riprova più tardi.');
     } finally {
       setStarting(false);
+    }
+  };
+
+  const handleRetry = async (scan) => {
+    setRetryingId(scan.id);
+    setStartError('');
+    try {
+      await webScan.remove(scan.id);
+      const newScan = await webScan.start(scan.domain_id);
+      refetch();
+      if (newScan?.id) await pollScanCompletion(newScan.id);
+    } catch (err) {
+      setStartError(err.message ?? 'Errore durante il nuovo tentativo.');
+    } finally {
+      setRetryingId(null);
     }
   };
 
@@ -89,6 +115,15 @@ export default function WebScanner() {
                 <div className="flex items-center gap-3">
                   <SeverityBadge value={s.status} />
                   <span className="text-sm text-white">{s.target_url}</span>
+                  {(s.status === 'pending' || s.status === 'failed') && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleRetry(s); }}
+                      disabled={retryingId === s.id}
+                      className="text-xs text-corvin-accent hover:underline disabled:opacity-50"
+                    >
+                      {retryingId === s.id ? 'Avvio…' : '↺ Riprova'}
+                    </button>
+                  )}
                 </div>
                 <span className="text-xs text-gray-500">
                   {new Date(s.created_at).toLocaleString('it-IT')}
