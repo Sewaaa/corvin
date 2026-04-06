@@ -268,3 +268,5 @@ async def remove_monitored_email(
         resource_id=str(monitored_id),
         ip_address=request.client.host if request.client else None,
     )
+
+    await db.commit()
