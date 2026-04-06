@@ -498,7 +498,7 @@ async def scan_email_account(
             message_id=msg_id or None,
             subject=em.get("subject", "")[:1024] or None,
             sender=em.get("from", "unknown")[:512],
-            recipient=em.get("to", account.email_address)[:512],
+            recipient=account.email_address,
             received_at=received_at,
             severity=analysis["severity"],
             threat_type=analysis["threat_type"],

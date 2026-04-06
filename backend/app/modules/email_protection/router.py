@@ -232,7 +232,7 @@ async def list_threats(
     if is_quarantined is not None:
         base_query = base_query.where(EmailThreat.is_quarantined == is_quarantined)
     if recipient:
-        base_query = base_query.where(EmailThreat.recipient == recipient)
+        base_query = base_query.where(EmailThreat.recipient.ilike(f"%{recipient}%"))
 
     count_result = await db.execute(select(func.count()).select_from(base_query.subquery()))
     total = count_result.scalar_one()
