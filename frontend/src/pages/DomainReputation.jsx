@@ -138,7 +138,7 @@ export default function DomainReputation() {
                   )}
                   {d.verification_token && !d.is_verified && (
                     <p className="text-xs text-gray-500 mt-1">
-                      TXT: <code className="text-yellow-400">corvin-verify={d.verification_token}</code>
+                      TXT: <code className="text-yellow-400">{d.verification_token}</code>
                     </p>
                   )}
                   {d.last_scan_at && (
