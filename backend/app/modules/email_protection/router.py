@@ -216,6 +216,7 @@ async def list_threats(
     severity: Optional[str] = Query(None, pattern="^(critical|high|medium|low)$"),
     threat_type: Optional[str] = Query(None),
     is_quarantined: Optional[bool] = Query(None),
+    recipient: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
@@ -230,6 +231,8 @@ async def list_threats(
         base_query = base_query.where(EmailThreat.threat_type == threat_type)
     if is_quarantined is not None:
         base_query = base_query.where(EmailThreat.is_quarantined == is_quarantined)
+    if recipient:
+        base_query = base_query.where(EmailThreat.recipient == recipient)
 
     count_result = await db.execute(select(func.count()).select_from(base_query.subquery()))
     total = count_result.scalar_one()

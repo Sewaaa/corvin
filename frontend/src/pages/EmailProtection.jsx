@@ -5,23 +5,192 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
 
-function Tab({ label, active, onClick }) {
+// ── Pannello minacce di un singolo account ────────────────────────────────────
+function ThreatPanel({ emailAddress, onClose }) {
+  const { data, loading, error, refetch } = useApi(
+    () => emailApi.listThreatsByAccount(emailAddress),
+    [emailAddress],
+  );
+  const [actionError, setActionError] = useState('');
+
+  const handleAction = async (id, action) => {
+    setActionError('');
+    try {
+      await emailApi.updateThreat(id, action);
+      refetch();
+    } catch (err) {
+      setActionError(err.message ?? 'Errore durante l\'operazione.');
+    }
+  };
+
+  const threats = data?.items ?? [];
+
   return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-        active ? 'border-corvin-accent text-white' : 'border-transparent text-gray-400 hover:text-white'
-      }`}
-    >
-      {label}
-    </button>
+    <div className="border-t border-corvin-700 mt-3 pt-3">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+          Minacce rilevate
+        </span>
+        <button onClick={onClose} className="text-xs text-gray-500 hover:text-white">✕ Chiudi</button>
+      </div>
+
+      {actionError && <p className="text-red-400 text-xs mb-2">⚠ {actionError}</p>}
+      {loading && <p className="text-xs text-gray-500 py-2">Caricamento…</p>}
+      {error && <p className="text-red-400 text-xs py-2">{error}</p>}
+
+      {!loading && threats.length === 0 && (
+        <p className="text-xs text-gray-500 py-2">Nessuna minaccia trovata per questo account.</p>
+      )}
+
+      {!loading && threats.length > 0 && (
+        <div className="space-y-2">
+          {threats.map((t) => (
+            <div key={t.id} className="bg-corvin-700/40 rounded-lg px-3 py-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <SeverityBadge value={t.severity} />
+                    <span className="text-xs text-white font-medium">{t.threat_type}</span>
+                    {t.is_quarantined && (
+                      <span className="text-xs bg-yellow-900/50 text-yellow-400 px-2 py-0.5 rounded-full">quarantena</span>
+                    )}
+                    {t.is_released && (
+                      <span className="text-xs bg-green-900/50 text-green-400 px-2 py-0.5 rounded-full">rilasciata</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 truncate">Da: {t.sender}</p>
+                  {t.subject && <p className="text-xs text-gray-500 truncate">Oggetto: {t.subject}</p>}
+                  {t.detection_reasons?.length > 0 && (
+                    <p className="text-xs text-gray-600 mt-0.5">↳ {t.detection_reasons.join(', ')}</p>
+                  )}
+                  <div className="flex gap-3 mt-1 text-xs">
+                    {t.spf_result && (
+                      <span className={t.spf_result === 'pass' ? 'text-green-500' : 'text-red-400'}>
+                        SPF: {t.spf_result}
+                      </span>
+                    )}
+                    {t.dkim_result && (
+                      <span className={t.dkim_result === 'pass' ? 'text-green-500' : 'text-red-400'}>
+                        DKIM: {t.dkim_result}
+                      </span>
+                    )}
+                    {t.dmarc_result && (
+                      <span className={t.dmarc_result === 'pass' ? 'text-green-500' : 'text-red-400'}>
+                        DMARC: {t.dmarc_result}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {!t.is_quarantined && !t.is_released && (
+                    <button
+                      onClick={() => handleAction(t.id, 'quarantine')}
+                      className="text-xs text-yellow-400 hover:underline"
+                    >
+                      Quarantena
+                    </button>
+                  )}
+                  {t.is_quarantined && (
+                    <button
+                      onClick={() => handleAction(t.id, 'release')}
+                      className="text-xs text-green-400 hover:underline"
+                    >
+                      Rilascia
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
+// ── Card singolo account ──────────────────────────────────────────────────────
+function AccountCard({ account, onScan, onRemove, scanning, removing }) {
+  const [showThreats, setShowThreats] = useState(false);
+
+  return (
+    <div className={`bg-corvin-800 border rounded-xl px-4 py-3 transition-colors ${
+      showThreats ? 'border-corvin-accent/40' : 'border-corvin-700'
+    }`}>
+      {/* Riga principale */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm text-white font-medium truncate">{account.email_address}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{account.imap_host}:{account.imap_port}</p>
+        </div>
+        {account.threats_count > 0 ? (
+          <span className="text-xs font-semibold text-red-400 bg-red-900/30 px-2 py-0.5 rounded-full shrink-0">
+            {account.threats_count} minacce
+          </span>
+        ) : (
+          <span className="text-xs text-green-500 shrink-0">✓ nessuna minaccia</span>
+        )}
+      </div>
+
+      {/* Riga secondaria: stato scan + azioni */}
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-corvin-700/50 gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          {account.last_scan_status
+            ? <SeverityBadge value={account.last_scan_status === 'ok' ? 'safe' : 'failed'} />
+            : <span className="text-xs text-gray-500">Mai scansionato</span>}
+          {account.last_scanned_at && (
+            <span className="text-xs text-gray-600">
+              {new Date(account.last_scanned_at).toLocaleString('it-IT')}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Vedi minacce — visibile solo se ce ne sono */}
+          {account.threats_count > 0 && (
+            <button
+              onClick={() => setShowThreats((v) => !v)}
+              className={`px-3 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                showThreats
+                  ? 'bg-corvin-accent/20 text-corvin-accent border-corvin-accent/40'
+                  : 'bg-transparent text-gray-300 border-corvin-700 hover:border-corvin-accent/40 hover:text-corvin-accent'
+              }`}
+            >
+              {showThreats ? '▲ Nascondi minacce' : `▼ Vedi minacce (${account.threats_count})`}
+            </button>
+          )}
+
+          <button
+            onClick={() => onScan(account.id)}
+            disabled={scanning}
+            className="px-3 py-1 text-xs font-medium bg-corvin-accent/20 text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/30 disabled:opacity-50 transition-colors"
+          >
+            {scanning ? '⟳ Scan in corso…' : '▶ Avvia scan'}
+          </button>
+
+          <button
+            onClick={() => onRemove(account.id)}
+            disabled={removing}
+            className="text-xs text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+          >
+            {removing ? '…' : '✕'}
+          </button>
+        </div>
+      </div>
+
+      {/* Pannello minacce inline */}
+      {showThreats && (
+        <ThreatPanel
+          emailAddress={account.email_address}
+          onClose={() => setShowThreats(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Pagina principale ─────────────────────────────────────────────────────────
 export default function EmailProtection() {
-  const [tab, setTab] = useState('accounts');
-  const { data: accounts, loading: loadingA, refetch: refetchA } = useApi(() => emailApi.listAccounts());
-  const { data: threatsData, loading: loadingT, refetch: refetchT } = useApi(() => emailApi.listThreats());
+  const { data: accounts, loading, refetch } = useApi(() => emailApi.listAccounts());
 
   const [form, setForm] = useState({ email_address: '', imap_host: '', imap_port: 993, password: '', use_ssl: true });
   const [showForm, setShowForm] = useState(false);
@@ -29,9 +198,10 @@ export default function EmailProtection() {
   const [saveError, setSaveError] = useState('');
   const [scanningId, setScanningId] = useState(null);
   const [removingId, setRemovingId] = useState(null);
-  const [actionError, setActionError] = useState('');
+  const [pageError, setPageError] = useState('');
 
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+  const set = (k) => (e) =>
+    setForm((f) => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -41,12 +211,12 @@ export default function EmailProtection() {
       await emailApi.addAccount({ ...form, imap_port: Number(form.imap_port) });
       setShowForm(false);
       setForm({ email_address: '', imap_host: '', imap_port: 993, password: '', use_ssl: true });
-      refetchA();
+      refetch();
     } catch (err) {
       const msg = err.message ?? '';
       if (msg.includes('IMAP') || msg.includes('connettersi')) {
-        setSaveError('Impossibile connettersi al server IMAP. Controlla host, porta, credenziali e che IMAP sia abilitato sul tuo account.');
-      } else if (msg.includes('già monitorato') || msg.includes('409')) {
+        setSaveError('Impossibile connettersi al server IMAP. Controlla host, porta e credenziali.');
+      } else if (msg.includes('già monitorato')) {
         setSaveError('Questo account è già nella lista.');
       } else {
         setSaveError(msg || 'Errore durante il salvataggio. Riprova.');
@@ -58,14 +228,13 @@ export default function EmailProtection() {
 
   const handleScan = async (id) => {
     setScanningId(id);
-    setActionError('');
+    setPageError('');
     try {
       await emailApi.triggerScan(id);
-      // Attendi qualche secondo poi ricarica lo stato
       await new Promise((r) => setTimeout(r, 3000));
-      await refetchA();
+      await refetch();
     } catch (err) {
-      setActionError(err.message ?? 'Errore durante la scansione.');
+      setPageError(err.message ?? 'Errore durante la scansione.');
     } finally {
       setScanningId(null);
     }
@@ -74,24 +243,14 @@ export default function EmailProtection() {
   const handleRemove = async (id) => {
     if (!window.confirm('Rimuovere questo account? Verranno cancellate anche tutte le minacce associate.')) return;
     setRemovingId(id);
-    setActionError('');
+    setPageError('');
     try {
       await emailApi.deleteAccount(id);
-      await refetchA();
+      await refetch();
     } catch (err) {
-      setActionError(err.message ?? 'Errore durante la rimozione.');
+      setPageError(err.message ?? 'Errore durante la rimozione.');
     } finally {
       setRemovingId(null);
-    }
-  };
-
-  const handleAction = async (id, action) => {
-    setActionError('');
-    try {
-      await emailApi.updateThreat(id, action);
-      refetchT();
-    } catch (err) {
-      setActionError(err.message ?? 'Errore durante l\'operazione.');
     }
   };
 
@@ -102,175 +261,70 @@ export default function EmailProtection() {
         <p className="text-gray-400 text-sm mt-1">IMAP scan, phishing detection, SPF/DKIM/DMARC analysis</p>
       </div>
 
-      <div className="flex border-b border-corvin-700 mb-6 gap-1">
-        <Tab label="Account IMAP" active={tab === 'accounts'} onClick={() => setTab('accounts')} />
-        <Tab
-          label={`Minacce${threatsData?.total ? ` (${threatsData.total})` : ''}`}
-          active={tab === 'threats'}
-          onClick={() => setTab('threats')}
-        />
+      {pageError && <p className="text-red-400 text-sm mb-4">⚠ {pageError}</p>}
+
+      {/* Bottone aggiungi */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => { setShowForm((v) => !v); setSaveError(''); }}
+          className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg"
+        >
+          {showForm ? '✕ Annulla' : '+ Aggiungi account'}
+        </button>
       </div>
 
-      {actionError && <p className="text-red-400 text-sm mb-4">⚠ {actionError}</p>}
-
-      {/* ── Tab Account ── */}
-      {tab === 'accounts' && (
-        <div>
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => { setShowForm((v) => !v); setSaveError(''); }}
-              className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg"
-            >
-              {showForm ? '✕ Annulla' : '+ Aggiungi account'}
-            </button>
+      {/* Form aggiunta account */}
+      {showForm && (
+        <form onSubmit={handleAdd} className="bg-corvin-800 border border-corvin-700 rounded-xl p-4 mb-4 space-y-3">
+          <div className="bg-corvin-700/40 rounded-lg px-3 py-2 text-xs text-gray-400 space-y-0.5">
+            <p>• <strong className="text-gray-300">Gmail</strong>: host <code>imap.gmail.com</code>, porta 993 — usa un'<strong className="text-gray-300">App Password</strong></p>
+            <p>• <strong className="text-gray-300">Outlook</strong>: host <code>outlook.office365.com</code>, porta 993</p>
+            <p>• <strong className="text-gray-300">Yahoo</strong>: host <code>imap.mail.yahoo.com</code>, porta 993</p>
           </div>
-
-          {showForm && (
-            <form onSubmit={handleAdd} className="bg-corvin-800 border border-corvin-700 rounded-xl p-4 mb-4 space-y-3">
-              {/* Info box */}
-              <div className="bg-corvin-700/40 rounded-lg px-3 py-2 text-xs text-gray-400 space-y-0.5">
-                <p>• <strong className="text-gray-300">Gmail</strong>: host <code>imap.gmail.com</code>, porta 993 — usa un'<strong className="text-gray-300">App Password</strong> (non la password normale)</p>
-                <p>• <strong className="text-gray-300">Outlook</strong>: host <code>outlook.office365.com</code>, porta 993</p>
-                <p>• <strong className="text-gray-300">Yahoo</strong>: host <code>imap.mail.yahoo.com</code>, porta 993</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Email" type="email" value={form.email_address} onChange={set('email_address')} required />
-                <Field label="Password IMAP / App Password" type="password" value={form.password} onChange={set('password')} required />
-                <Field label="IMAP Host" value={form.imap_host} onChange={set('imap_host')} placeholder="imap.gmail.com" required />
-                <Field label="Porta" type="number" value={form.imap_port} onChange={set('imap_port')} />
-              </div>
-              <label className="flex items-center gap-2 text-sm text-gray-300">
-                <input type="checkbox" checked={form.use_ssl} onChange={set('use_ssl')} className="rounded" />
-                Usa SSL (raccomandato)
-              </label>
-              {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg disabled:opacity-50"
-              >
-                {saving ? 'Verifica connessione IMAP…' : 'Salva account'}
-              </button>
-              <p className="text-xs text-gray-500">La connessione IMAP viene testata prima del salvataggio.</p>
-            </form>
-          )}
-
-          {loadingA && <LoadingSpinner />}
-          {!loadingA && accounts?.length === 0 && (
-            <EmptyState title="Nessun account IMAP" description="Aggiungi un account per avviare il monitoraggio email." />
-          )}
-          {!loadingA && accounts?.length > 0 && (
-            <div className="space-y-3">
-              {accounts.map((a) => (
-                <div key={a.id} className="bg-corvin-800 border border-corvin-700 rounded-xl px-4 py-3">
-                  {/* Riga principale */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm text-white font-medium truncate">{a.email_address}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{a.imap_host}:{a.imap_port}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {a.threats_count > 0
-                        ? <span className="text-xs font-semibold text-red-400 bg-red-900/30 px-2 py-0.5 rounded-full">{a.threats_count} minacce</span>
-                        : <span className="text-xs text-gray-500">0 minacce</span>}
-                    </div>
-                  </div>
-
-                  {/* Riga secondaria: stato + azioni */}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-corvin-700/50">
-                    <div className="flex items-center gap-2">
-                      {a.last_scan_status
-                        ? <SeverityBadge value={a.last_scan_status === 'ok' ? 'safe' : 'failed'} />
-                        : <span className="text-xs text-gray-500">Mai scansionato</span>}
-                      {a.last_scanned_at && (
-                        <span className="text-xs text-gray-600">
-                          {new Date(a.last_scanned_at).toLocaleString('it-IT')}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleScan(a.id)}
-                        disabled={scanningId === a.id}
-                        className="px-3 py-1 text-xs font-medium bg-corvin-accent/20 text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/30 disabled:opacity-50 transition-colors"
-                      >
-                        {scanningId === a.id ? '⟳ Scan in corso…' : '▶ Avvia scan'}
-                      </button>
-                      <button
-                        onClick={() => handleRemove(a.id)}
-                        disabled={removingId === a.id}
-                        className="text-xs text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
-                      >
-                        {removingId === a.id ? '…' : '✕ Rimuovi'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Email" type="email" value={form.email_address} onChange={set('email_address')} required />
+            <Field label="Password IMAP / App Password" type="password" value={form.password} onChange={set('password')} required />
+            <Field label="IMAP Host" value={form.imap_host} onChange={set('imap_host')} placeholder="imap.gmail.com" required />
+            <Field label="Porta" type="number" value={form.imap_port} onChange={set('imap_port')} />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-gray-300">
+            <input type="checkbox" checked={form.use_ssl} onChange={set('use_ssl')} className="rounded" />
+            Usa SSL (raccomandato)
+          </label>
+          {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg disabled:opacity-50"
+            >
+              {saving ? 'Verifica connessione IMAP…' : 'Salva account'}
+            </button>
+            <p className="text-xs text-gray-500">La connessione IMAP viene testata prima del salvataggio.</p>
+          </div>
+        </form>
       )}
 
-      {/* ── Tab Minacce ── */}
-      {tab === 'threats' && (
-        <div>
-          {loadingT && <LoadingSpinner />}
-          {!loadingT && (threatsData?.items?.length ?? 0) === 0 && (
-            <EmptyState
-              title="Nessuna minaccia rilevata"
-              description="Il monitoraggio è attivo. Le minacce appariranno qui dopo la prima scansione."
+      {/* Lista account */}
+      {loading && <LoadingSpinner />}
+      {!loading && (accounts ?? []).length === 0 && (
+        <EmptyState
+          title="Nessun account IMAP"
+          description="Aggiungi un account per avviare il monitoraggio email."
+        />
+      )}
+      {!loading && (accounts ?? []).length > 0 && (
+        <div className="space-y-3">
+          {accounts.map((a) => (
+            <AccountCard
+              key={a.id}
+              account={a}
+              onScan={handleScan}
+              onRemove={handleRemove}
+              scanning={scanningId === a.id}
+              removing={removingId === a.id}
             />
-          )}
-          {!loadingT && threatsData?.items?.length > 0 && (
-            <div className="space-y-2">
-              {threatsData.items.map((t) => (
-                <div key={t.id} className="bg-corvin-800 border border-corvin-700 rounded-xl p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <SeverityBadge value={t.severity} />
-                        <span className="text-sm text-white font-medium">{t.threat_type}</span>
-                        {t.is_quarantined && <span className="text-xs bg-yellow-900/50 text-yellow-400 px-2 py-0.5 rounded-full">in quarantena</span>}
-                        {t.is_released && <span className="text-xs bg-green-900/50 text-green-400 px-2 py-0.5 rounded-full">rilasciata</span>}
-                      </div>
-                      <p className="text-xs text-gray-400 truncate">Da: {t.sender}</p>
-                      {t.subject && <p className="text-xs text-gray-500 truncate">Oggetto: {t.subject}</p>}
-                      {t.detection_reasons?.length > 0 && (
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Motivi: {t.detection_reasons.join(', ')}
-                        </p>
-                      )}
-                      <div className="flex gap-3 mt-1 text-xs text-gray-500">
-                        {t.spf_result && <span>SPF: <span className={t.spf_result === 'pass' ? 'text-green-400' : 'text-red-400'}>{t.spf_result}</span></span>}
-                        {t.dkim_result && <span>DKIM: <span className={t.dkim_result === 'pass' ? 'text-green-400' : 'text-red-400'}>{t.dkim_result}</span></span>}
-                        {t.dmarc_result && <span>DMARC: <span className={t.dmarc_result === 'pass' ? 'text-green-400' : 'text-red-400'}>{t.dmarc_result}</span></span>}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      {!t.is_quarantined && !t.is_released && (
-                        <button
-                          onClick={() => handleAction(t.id, 'quarantine')}
-                          className="text-xs text-yellow-400 hover:underline"
-                        >
-                          Quarantena
-                        </button>
-                      )}
-                      {t.is_quarantined && (
-                        <button
-                          onClick={() => handleAction(t.id, 'release')}
-                          className="text-xs text-green-400 hover:underline"
-                        >
-                          Rilascia
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          ))}
         </div>
       )}
     </div>
