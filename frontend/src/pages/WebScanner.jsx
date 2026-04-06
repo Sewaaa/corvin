@@ -12,6 +12,7 @@ export default function WebScanner() {
   const [selectedDomain, setSelectedDomain] = useState('');
   const [starting, setStarting] = useState(false);
   const [retryingId, setRetryingId] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
   const [startError, setStartError] = useState('');
   const [detail, setDetail] = useState(null);
   const [detailError, setDetailError] = useState('');
@@ -58,6 +59,21 @@ export default function WebScanner() {
     }
   };
 
+  const handleRemove = async (e, scanId) => {
+    e.stopPropagation();
+    if (!window.confirm('Rimuovere questa scansione?')) return;
+    setRemovingId(scanId);
+    try {
+      await webScan.remove(scanId);
+      if (detail?.id === scanId) { setDetail(null); setDetailError(''); }
+      await refetch();
+    } catch (err) {
+      setStartError(err.message ?? 'Errore durante la rimozione.');
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
   const handleDetail = async (id) => {
     if (detail?.id === id) { setDetail(null); setDetailError(''); return; }
     setDetailError('');
@@ -68,6 +84,8 @@ export default function WebScanner() {
       setDetailError(err.message ?? 'Errore nel caricamento dei dettagli.');
     }
   };
+
+  const isOpen = (id) => detail?.id === id;
 
   return (
     <div>
@@ -112,17 +130,43 @@ export default function WebScanner() {
       {!loading && scans?.length > 0 && (
         <div className="space-y-2">
           {scans.map((s) => (
-            <div key={s.id} className="bg-corvin-800 border border-corvin-700 rounded-xl">
+            <div
+              key={s.id}
+              className={`bg-corvin-800 border rounded-xl transition-colors ${
+                isOpen(s.id) ? 'border-corvin-accent/50' : 'border-corvin-700'
+              }`}
+            >
+              {/* Row header */}
               <div
-                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-corvin-700/30"
-                onClick={() => handleDetail(s.id)}
+                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-corvin-700/30 rounded-xl"
+                onClick={() => s.status === 'completed' && handleDetail(s.id)}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <SeverityBadge value={s.status} />
-                  <span className="text-sm text-white">{s.target_url}</span>
+                  <span className="text-sm text-white truncate">{s.target_url}</span>
+
+                  {/* Stato aggiuntivo inline */}
                   {s.status === 'failed' && (
-                    <span className="text-xs text-gray-500">sito non raggiungibile</span>
+                    <span className="text-xs text-gray-500 shrink-0">sito non raggiungibile</span>
                   )}
+                  {s.status === 'completed' && (
+                    <span className="text-xs text-gray-500 shrink-0">
+                      {s.findings_count > 0
+                        ? `${s.findings_count} finding${s.findings_count > 1 ? 's' : ''}`
+                        : 'nessun finding'}
+                      {' · '}
+                      {s.critical_count > 0 && <span className="text-red-400">{s.critical_count} critici</span>}
+                      {s.high_count > 0 && s.critical_count === 0 && <span className="text-orange-400">{s.high_count} high</span>}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0 ml-3">
+                  <span className="text-xs text-gray-500">
+                    {new Date(s.created_at).toLocaleString('it-IT')}
+                  </span>
+
+                  {/* Bottone Riprova */}
                   {(s.status === 'pending' || s.status === 'failed') && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleRetry(s); }}
@@ -132,16 +176,31 @@ export default function WebScanner() {
                       {retryingId === s.id ? 'Avvio…' : '↺ Riprova'}
                     </button>
                   )}
+
+                  {/* Freccia apri/chiudi per completed */}
+                  {s.status === 'completed' && (
+                    <span className="text-xs text-gray-400">
+                      {isOpen(s.id) ? '▲' : '▼ dettagli'}
+                    </span>
+                  )}
+
+                  {/* Bottone rimuovi */}
+                  <button
+                    onClick={(e) => handleRemove(e, s.id)}
+                    disabled={removingId === s.id}
+                    className="text-xs text-gray-500 hover:text-red-400 transition-colors disabled:opacity-40"
+                    title="Rimuovi scansione"
+                  >
+                    {removingId === s.id ? '…' : '✕'}
+                  </button>
                 </div>
-                <span className="text-xs text-gray-500">
-                  {new Date(s.created_at).toLocaleString('it-IT')}
-                </span>
               </div>
 
-              {detail?.id === s.id && (
+              {/* Detail panel */}
+              {isOpen(s.id) && (
                 <div className="border-t border-corvin-700 px-4 py-3">
                   <div className="flex gap-4 mb-3 text-xs">
-                    {['critical','high','medium','low','info'].map((sev) => (
+                    {['critical', 'high', 'medium', 'low', 'info'].map((sev) => (
                       <span key={sev} className="text-gray-400">
                         <span className="text-white font-medium">{detail.summary?.[sev] ?? 0}</span> {sev}
                       </span>
