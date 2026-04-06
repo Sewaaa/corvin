@@ -19,8 +19,10 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ emails: 0, domains: 0, unread: 0, threats: 0 });
   const [apiOk, setApiOk] = useState(null);
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
+
   useEffect(() => {
-    fetch('/api/v1/health')
+    fetch(`${API_BASE}/health`)
       .then((r) => r.json())
       .then((d) => setApiOk(d.status === 'ok' || d.status === 'healthy'))
       .catch(() => setApiOk(false));
