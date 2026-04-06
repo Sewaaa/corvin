@@ -63,7 +63,7 @@ export default function DomainReputation() {
     try {
       await domainApi.scan(id);
       // scan runs in background — wait 3s then refetch
-      await new Promise((r) => setTimeout(r, 6000));
+      await new Promise((r) => setTimeout(r, 10000));
       await refetch();
     } catch (err) {
       const msg = err.message ?? '';
