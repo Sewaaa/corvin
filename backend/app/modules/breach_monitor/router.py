@@ -94,17 +94,18 @@ async def list_monitored_emails(
         db, organization_id=current_org.id, page=page, limit=limit
     )
 
-    # Count breach records per email
+    # Count and fetch breach names per email
     results = []
     for e in emails:
-        count_q = await db.execute(
-            select(func.count(BreachRecord.id)).where(
+        records_q = await db.execute(
+            select(BreachRecord.breach_name).where(
                 BreachRecord.monitored_email_id == e.id
             )
         )
-        count = count_q.scalar_one()
+        names = [row[0] for row in records_q.all()]
         item = MonitoredEmailResponse.model_validate(e)
-        item.breach_count = count
+        item.breach_count = len(names)
+        item.breach_names = names
         results.append(item)
     return results
 

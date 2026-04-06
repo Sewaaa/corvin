@@ -37,6 +37,7 @@ class MonitoredEmailResponse(BaseModel):
     email_masked: str
     is_breached: bool
     breach_count: int = 0
+    breach_names: List[str] = []
     last_checked: Optional[datetime] = None
     created_at: datetime
 
