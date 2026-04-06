@@ -161,59 +161,53 @@ export default function EmailProtection() {
             <EmptyState title="Nessun account IMAP" description="Aggiungi un account per avviare il monitoraggio email." />
           )}
           {!loadingA && accounts?.length > 0 && (
-            <div className="bg-corvin-800 border border-corvin-700 rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-corvin-700 text-gray-400 text-xs uppercase">
-                    <th className="text-left px-4 py-3">Email</th>
-                    <th className="text-left px-4 py-3">Host</th>
-                    <th className="text-left px-4 py-3">Ultimo scan</th>
-                    <th className="text-left px-4 py-3">Minacce</th>
-                    <th className="px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accounts.map((a) => (
-                    <tr key={a.id} className="border-b border-corvin-700/50 hover:bg-corvin-700/30">
-                      <td className="px-4 py-3 text-white">{a.email_address}</td>
-                      <td className="px-4 py-3 text-gray-400">{a.imap_host}:{a.imap_port}</td>
-                      <td className="px-4 py-3">
-                        {a.last_scan_status
-                          ? <SeverityBadge value={a.last_scan_status === 'ok' ? 'safe' : 'failed'} />
-                          : <span className="text-xs text-gray-500">mai eseguito</span>}
-                        {a.last_scanned_at && (
-                          <span className="text-xs text-gray-500 ml-2">
-                            {new Date(a.last_scanned_at).toLocaleString('it-IT')}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-white font-medium">
-                        {a.threats_count > 0
-                          ? <span className="text-red-400">{a.threats_count}</span>
-                          : <span className="text-gray-400">0</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-3 justify-end items-center">
-                          <button
-                            onClick={() => handleScan(a.id)}
-                            disabled={scanningId === a.id}
-                            className="text-xs text-corvin-accent hover:underline disabled:opacity-50"
-                          >
-                            {scanningId === a.id ? 'Scan in corso…' : '▶ Scan'}
-                          </button>
-                          <button
-                            onClick={() => handleRemove(a.id)}
-                            disabled={removingId === a.id}
-                            className="text-xs text-red-400 hover:underline disabled:opacity-50"
-                          >
-                            {removingId === a.id ? '…' : 'Rimuovi'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-3">
+              {accounts.map((a) => (
+                <div key={a.id} className="bg-corvin-800 border border-corvin-700 rounded-xl px-4 py-3">
+                  {/* Riga principale */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-white font-medium truncate">{a.email_address}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{a.imap_host}:{a.imap_port}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {a.threats_count > 0
+                        ? <span className="text-xs font-semibold text-red-400 bg-red-900/30 px-2 py-0.5 rounded-full">{a.threats_count} minacce</span>
+                        : <span className="text-xs text-gray-500">0 minacce</span>}
+                    </div>
+                  </div>
+
+                  {/* Riga secondaria: stato + azioni */}
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-corvin-700/50">
+                    <div className="flex items-center gap-2">
+                      {a.last_scan_status
+                        ? <SeverityBadge value={a.last_scan_status === 'ok' ? 'safe' : 'failed'} />
+                        : <span className="text-xs text-gray-500">Mai scansionato</span>}
+                      {a.last_scanned_at && (
+                        <span className="text-xs text-gray-600">
+                          {new Date(a.last_scanned_at).toLocaleString('it-IT')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleScan(a.id)}
+                        disabled={scanningId === a.id}
+                        className="px-3 py-1 text-xs font-medium bg-corvin-accent/20 text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/30 disabled:opacity-50 transition-colors"
+                      >
+                        {scanningId === a.id ? '⟳ Scan in corso…' : '▶ Avvia scan'}
+                      </button>
+                      <button
+                        onClick={() => handleRemove(a.id)}
+                        disabled={removingId === a.id}
+                        className="text-xs text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                      >
+                        {removingId === a.id ? '…' : '✕ Rimuovi'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
