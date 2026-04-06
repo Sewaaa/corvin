@@ -4,6 +4,41 @@ import { sandbox as sandboxApi } from '../api/sandbox';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
+import InfoModal from '../components/InfoModal';
+
+const INFO_SECTIONS = [
+  {
+    heading: 'Cos\'è',
+    text: 'File Sandbox esegue analisi statica su file caricati: matching di regole YARA, lookup dell\'hash SHA-256 su VirusTotal, calcolo dell\'entropia (indicatore di packing/cifratura) e parsing PE per i file Windows.',
+  },
+  {
+    heading: 'Come si usa',
+    items: [
+      'Trascina un file nella drop zone oppure clicca per selezionarlo.',
+      'L\'analisi parte in background: attendi che lo stato passi da <em>analyzing</em> a un risultato.',
+      'Il risultato può essere: <strong>safe</strong>, <strong>suspicious</strong> o <strong>malicious</strong>.',
+      'Clicca su un file per vedere i dettagli: match YARA, score VirusTotal, entropia.',
+    ],
+  },
+  {
+    heading: 'File di test consigliati',
+    items: [
+      { label: 'File sicuro', value: 'qualsiasi .txt, .pdf o immagine comune' },
+      { label: 'EICAR test string', value: 'crea un .txt con la stringa EICAR per testare i matching AV' },
+      { label: 'PDF con macro', value: 'upload di un PDF con JavaScript inline → suspicious' },
+      { label: 'Max dimensione', value: '10 MB per file' },
+    ],
+  },
+  {
+    heading: 'Formati supportati',
+    items: [
+      'Tutti i tipi di file (analisi generica: hash + entropia + YARA).',
+      'File PE (.exe, .dll) → parsing header, sezioni, imports.',
+      'Archivi ZIP → analisi del contenuto (se non cifrati).',
+      'Script (.ps1, .bat, .js, .vbs) → pattern matching YARA.',
+    ],
+  },
+];
 
 function DropZone({ onFile }) {
   const [drag, setDrag] = useState(false);
@@ -50,6 +85,8 @@ export default function FileSandbox() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [detail, setDetail] = useState(null);
+  const [showInfo, setShowInfo] = useState(false);
+  const [removingId, setRemovingId] = useState(null);
 
   const handleFile = async (file) => {
     setUploadError('');
@@ -87,14 +124,44 @@ export default function FileSandbox() {
     try { setDetail(await sandboxApi.get(id)); } catch {}
   };
 
+  const handleRemove = async (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm('Rimuovere questo file dall\'elenco?')) return;
+    setRemovingId(id);
+    try {
+      await sandboxApi.remove(id);
+      if (detail?.id === id) setDetail(null);
+      await refetch();
+    } catch (err) {
+      setUploadError(err.message ?? 'Errore durante la rimozione.');
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
   const formatSize = (b) =>
     b > 1_048_576 ? `${(b / 1_048_576).toFixed(1)} MB` : `${(b / 1024).toFixed(0)} KB`;
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">File Sandbox</h1>
-        <p className="text-gray-400 text-sm mt-1">Analisi statica: YARA, VirusTotal hash, entropia, PE parsing</p>
+      <InfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="File Sandbox — Guida"
+        sections={INFO_SECTIONS}
+      />
+
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">File Sandbox</h1>
+          <p className="text-gray-400 text-sm mt-1">Analisi statica: YARA, VirusTotal hash, entropia, PE parsing</p>
+        </div>
+        <button
+          onClick={() => setShowInfo(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
+        >
+          <span>ⓘ</span> Info
+        </button>
       </div>
 
       <DropZone onFile={handleFile} />
@@ -121,7 +188,16 @@ export default function FileSandbox() {
                   <span className="text-sm text-white font-mono">{f.original_filename}</span>
                   <span className="text-xs text-gray-500">{formatSize(f.file_size)}</span>
                 </div>
-                <span className="text-xs text-gray-500">{new Date(f.created_at).toLocaleString('it-IT')}</span>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="text-xs text-gray-500">{new Date(f.created_at).toLocaleString('it-IT')}</span>
+                  <button
+                    onClick={(e) => handleRemove(e, f.id)}
+                    disabled={removingId === f.id}
+                    className="text-xs text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                  >
+                    {removingId === f.id ? '...' : '✕'}
+                  </button>
+                </div>
               </div>
 
               {detail?.id === f.id && (

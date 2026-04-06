@@ -3,6 +3,42 @@ import { useApi } from '../hooks/useApi';
 import { reports as reportsApi } from '../api/reports';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatCard from '../components/StatCard';
+import InfoModal from '../components/InfoModal';
+
+const INFO_SECTIONS = [
+  {
+    heading: 'Cos\'è',
+    text: 'Reports aggrega i dati da tutti i moduli in un\'unica vista di sintesi: email monitorate, domini, minacce email, file analizzati, notifiche. Permette anche di scaricare un report PDF completo.',
+  },
+  {
+    heading: 'Come si usa',
+    items: [
+      'La pagina si carica automaticamente con il sommario aggiornato.',
+      'Clicca <strong>↻ Aggiorna</strong> per ricaricare i dati in tempo reale.',
+      'Clicca <strong>↓ Scarica PDF</strong> per generare e scaricare un report completo.',
+      'Il PDF include tutti i moduli con severity breakdown e timestamp di generazione.',
+    ],
+  },
+  {
+    heading: 'Demo rapida',
+    items: [
+      'Popola i moduli: aggiungi email in Breach Monitor, lancia scan Web Scanner, carica un file.',
+      'Torna qui: vedrai tutti i contatori aggiornati in tempo reale.',
+      'Scarica il PDF: mostra il report professionale completo da presentare a un esaminatore.',
+    ],
+  },
+  {
+    heading: 'Dati nel PDF',
+    items: [
+      'Breach Monitor: email monitorate, compromesse, nomi breach.',
+      'Domain Reputation: domini, punteggi, finding.',
+      'Web Scanner: scansioni, finding per severity.',
+      'Email Protection: account, minacce, in quarantena.',
+      'File Sandbox: file analizzati, distribuzione per stato.',
+      'Notifications: totale alert per severity.',
+    ],
+  },
+];
 
 function SectionCard({ title, children }) {
   return (
@@ -36,6 +72,7 @@ export default function Reports() {
   const { data: summary, loading, error, refetch } = useApi(() => reportsApi.summary());
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
+  const [showInfo, setShowInfo] = useState(false);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -51,6 +88,13 @@ export default function Reports() {
 
   return (
     <div>
+      <InfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Reports — Guida"
+        sections={INFO_SECTIONS}
+      />
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Reports</h1>
@@ -64,6 +108,12 @@ export default function Reports() {
           </p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={() => setShowInfo(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
+          >
+            <span>ⓘ</span> Info
+          </button>
           <button
             onClick={refetch}
             className="px-3 py-2 text-sm text-gray-400 hover:text-white border border-corvin-700 rounded-lg transition-colors"

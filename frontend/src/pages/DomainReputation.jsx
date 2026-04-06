@@ -4,6 +4,40 @@ import { domain as domainApi } from '../api/domain';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
+import InfoModal from '../components/InfoModal';
+
+const INFO_SECTIONS = [
+  {
+    heading: 'Cos\'è',
+    text: 'Domain Reputation analizza la salute di un dominio: record DNS, presenza in blacklist DNSBL, certificato SSL, dati WHOIS e punteggio di reputazione aggregato.',
+  },
+  {
+    heading: 'Come si usa',
+    items: [
+      'Inserisci un dominio (es. <code class="text-yellow-300">example.com</code>) e clicca <strong>+ Aggiungi</strong>.',
+      'Il sistema genera un <strong>token di verifica TXT</strong>: aggiungilo al DNS del dominio come record TXT per confermare la proprietà.',
+      'Clicca <strong>Verifica</strong> quando il record DNS si è propagato (max 48h, di solito pochi minuti).',
+      'Dopo la verifica, clicca <strong>Scansiona</strong> per avviare l\'analisi completa.',
+      'I risultati mostrano il punteggio (0–100) e i finding per severity.',
+    ],
+  },
+  {
+    heading: 'Domini di test consigliati',
+    items: [
+      { label: 'Dominio pubblico sicuro', value: 'example.com' },
+      { label: 'Google (certificato ottimo)', value: 'google.com' },
+      { label: 'Senza verifica DNS', value: 'qualsiasi dominio, salta la verifica in demo' },
+    ],
+  },
+  {
+    heading: 'Note tecniche',
+    items: [
+      'La verifica DNS richiede un record TXT nella zona radice del dominio.',
+      'La scansione include: MX, SPF, DKIM hint, DNSBL lookup, SSL expiry, WHOIS.',
+      'Il punteggio è calcolato sommando penalità per ogni finding rilevato.',
+    ],
+  },
+];
 
 function ScoreBar({ score }) {
   const color = score >= 80 ? 'bg-green-500' : score >= 50 ? 'bg-yellow-500' : 'bg-red-500';
@@ -25,6 +59,7 @@ export default function DomainReputation() {
   const [busyId, setBusyId] = useState(null);
   const [actionError, setActionError] = useState('');
   const [scanningId, setScanningId] = useState(null);
+  const [showInfo, setShowInfo] = useState(false);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -92,9 +127,24 @@ export default function DomainReputation() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Domain Reputation</h1>
-        <p className="text-gray-400 text-sm mt-1">DNS health, DNSBL, SSL e WHOIS analysis</p>
+      <InfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Domain Reputation — Guida"
+        sections={INFO_SECTIONS}
+      />
+
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Domain Reputation</h1>
+          <p className="text-gray-400 text-sm mt-1">DNS health, DNSBL, SSL e WHOIS analysis</p>
+        </div>
+        <button
+          onClick={() => setShowInfo(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
+        >
+          <span>ⓘ</span> Info
+        </button>
       </div>
 
       <form onSubmit={handleAdd} className="flex gap-3 mb-6">

@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/sandbox',    label: 'File Sandbox',      icon: '⧫' },
   { to: '/notifications', label: 'Notifications',  icon: '◉' },
   { to: '/reports',       label: 'Reports',         icon: '▤' },
+  { to: '/settings',      label: 'Impostazioni',    icon: '⚙' },
 ];
 
 export default function Sidebar({ unreadCount = 0 }) {

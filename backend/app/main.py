@@ -95,6 +95,7 @@ app = FastAPI(
         {"name": "email-protection", "description": "Email threat detection"},
         {"name": "notifications", "description": "Alerts and notifications"},
         {"name": "reports", "description": "Executive PDF report + JSON summary aggregati"},
+        {"name": "audit", "description": "Immutable audit trail (admin only)"},
     ],
     lifespan=lifespan,
 )

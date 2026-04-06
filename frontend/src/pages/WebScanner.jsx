@@ -5,17 +5,52 @@ import { domain as domainApi } from '../api/domain';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
+import InfoModal from '../components/InfoModal';
+
+const INFO_SECTIONS = [
+  {
+    heading: 'Cos\'è',
+    text: 'Web Scanner esegue una scansione passiva del sito associato a un dominio verificato: analizza header HTTP, cookies, redirect HTTPS, presenza di CSP/HSTS e altre configurazioni di sicurezza. Nessun payload offensivo viene inviato.',
+  },
+  {
+    heading: 'Come si usa',
+    items: [
+      'Aggiungi e <strong>verifica</strong> un dominio nella sezione Domain Reputation.',
+      'Torna qui, seleziona il dominio verificato dal menu e clicca <strong>Avvia scan</strong>.',
+      'La scansione gira in background: attendi il completamento (di solito 10–30 secondi).',
+      'Clicca sulla riga completata per vedere i <strong>finding</strong> con severity.',
+      'In caso di errore usa <strong>↺ Riprova</strong>; usa <strong>✕</strong> per eliminare una scansione.',
+    ],
+  },
+  {
+    heading: 'Dominio di test consigliato',
+    items: [
+      { label: 'Dominio pubblico', value: 'example.com (aggiungilo prima in Domain Reputation)' },
+      { label: 'Finding attesi', value: 'CSP mancante, HSTS assente, header X-Frame-Options' },
+    ],
+  },
+  {
+    heading: 'Note tecniche',
+    items: [
+      'La scansione fa max 20 richieste HTTP GET passive.',
+      'Controlla: redirect HTTP→HTTPS, HSTS, CSP, X-Content-Type-Options, X-Frame-Options, cookie Secure/HttpOnly.',
+      'I finding hanno severity: info / low / medium / high / critical.',
+    ],
+  },
+];
 
 export default function WebScanner() {
   const { data: scans, loading, error, refetch } = useApi(() => webScan.list());
   const { data: domains } = useApi(() => domainApi.list());
   const [selectedDomain, setSelectedDomain] = useState('');
+  const [frequency, setFrequency] = useState('manual');
   const [starting, setStarting] = useState(false);
   const [retryingId, setRetryingId] = useState(null);
   const [removingId, setRemovingId] = useState(null);
   const [startError, setStartError] = useState('');
   const [detail, setDetail] = useState(null);
   const [detailError, setDetailError] = useState('');
+  const [showInfo, setShowInfo] = useState(false);
 
   const verifiedDomains = (domains ?? []).filter((d) => d.is_verified);
 
@@ -34,7 +69,7 @@ export default function WebScanner() {
     setStartError('');
     setStarting(true);
     try {
-      const newScan = await webScan.start(selectedDomain);
+      const newScan = await webScan.start(selectedDomain, frequency);
       refetch();
       if (newScan?.id) await pollScanCompletion(newScan.id);
     } catch (err) {
@@ -89,22 +124,47 @@ export default function WebScanner() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Web Scanner</h1>
-        <p className="text-gray-400 text-sm mt-1">Scansione passiva — max 20 richieste, nessun payload intrusivo</p>
+      <InfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Web Scanner — Guida"
+        sections={INFO_SECTIONS}
+      />
+
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Web Scanner</h1>
+          <p className="text-gray-400 text-sm mt-1">Scansione passiva — max 20 richieste, nessun payload intrusivo</p>
+        </div>
+        <button
+          onClick={() => setShowInfo(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
+        >
+          <span>ⓘ</span> Info
+        </button>
       </div>
 
       {/* Start scan */}
-      <form onSubmit={handleStart} className="flex gap-3 mb-6">
+      <form onSubmit={handleStart} className="flex flex-wrap gap-3 mb-6">
         <select
           value={selectedDomain}
           onChange={(e) => setSelectedDomain(e.target.value)}
-          className="flex-1 bg-corvin-800 border border-corvin-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-corvin-accent"
+          className="flex-1 min-w-[200px] bg-corvin-800 border border-corvin-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-corvin-accent"
         >
           <option value="">Seleziona un dominio verificato…</option>
           {verifiedDomains.map((d) => (
             <option key={d.id} value={d.id}>{d.domain}</option>
           ))}
+        </select>
+        <select
+          value={frequency}
+          onChange={(e) => setFrequency(e.target.value)}
+          className="bg-corvin-800 border border-corvin-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-corvin-accent"
+        >
+          <option value="manual">Una tantum</option>
+          <option value="daily">Giornaliera</option>
+          <option value="weekly">Settimanale</option>
+          <option value="monthly">Mensile</option>
         </select>
         <button
           type="submit"
@@ -144,6 +204,11 @@ export default function WebScanner() {
                 <div className="flex items-center gap-3 min-w-0">
                   <SeverityBadge value={s.status} />
                   <span className="text-sm text-white truncate">{s.target_url}</span>
+                  {s.frequency && s.frequency !== 'manual' && (
+                    <span className="text-xs bg-corvin-accent/20 text-corvin-accent px-1.5 py-0.5 rounded shrink-0">
+                      {s.frequency === 'daily' ? 'giornaliera' : s.frequency === 'weekly' ? 'settimanale' : 'mensile'}
+                    </span>
+                  )}
 
                   {/* Stato aggiuntivo inline */}
                   {s.status === 'failed' && (

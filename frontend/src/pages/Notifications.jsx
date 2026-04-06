@@ -4,6 +4,48 @@ import { notifications as notifApi } from '../api/notifications';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
+import InfoModal from '../components/InfoModal';
+
+const INFO_SECTIONS = [
+  {
+    heading: 'Cos\'è',
+    text: 'Notifications raccoglie gli alert generati da tutti i moduli (breach rilevata, scan completato, minaccia email, file malicious) e li presenta in un feed con severity. Supporta anche webhook con firma HMAC-SHA256 per integrazioni esterne.',
+  },
+  {
+    heading: 'Tab Notifiche',
+    items: [
+      'Le notifiche arrivano automaticamente quando i moduli rilevano eventi.',
+      'Ogni notifica ha una <strong>severity</strong> (info / low / medium / high / critical) e un modulo sorgente.',
+      'Clicca <strong>✓ Letta</strong> per marcare una singola notifica come letta.',
+      'Usa <strong>Segna tutte come lette</strong> per azzerare il badge del counter.',
+    ],
+  },
+  {
+    heading: 'Tab Webhook',
+    items: [
+      'Aggiungi un endpoint URL per ricevere notifiche in tempo reale via HTTP POST.',
+      'Il payload JSON include: evento, severity, modulo, timestamp.',
+      'Imposta un <strong>Secret HMAC</strong> per verificare l\'autenticità delle richieste (header <code class="text-yellow-300">X-Corvin-Signature</code>).',
+      'Usa il tasto <strong>Test</strong> per inviare un evento di prova all\'endpoint.',
+    ],
+  },
+  {
+    heading: 'URL webhook di test gratuiti',
+    items: [
+      { label: 'webhook.site', value: 'https://webhook.site (genera un URL temporaneo istantaneo)' },
+      { label: 'requestbin', value: 'https://requestbin.com' },
+      { label: 'Pipedream', value: 'https://pipedream.com/requestbin' },
+    ],
+  },
+  {
+    heading: 'Come generare notifiche demo',
+    items: [
+      'Aggiungi una email in Breach Monitor → notifica generata se trovata in breach.',
+      'Avvia uno scan Web Scanner → notifica al completamento con finding count.',
+      'Carica un file in File Sandbox → notifica se risulta suspicious/malicious.',
+    ],
+  },
+];
 
 function Tab({ label, active, onClick }) {
   return (
@@ -26,6 +68,7 @@ export default function Notifications() {
   const [showWhForm, setShowWhForm] = useState(false);
   const [savingWh, setSavingWh] = useState(false);
   const [whError, setWhError] = useState('');
+  const [showInfo, setShowInfo] = useState(false);
 
   const handleMarkRead = async (id) => {
     try { await notifApi.markRead(id); refetch(); } catch {}
@@ -61,9 +104,24 @@ export default function Notifications() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Notifications</h1>
-        <p className="text-gray-400 text-sm mt-1">Alert in-app, email SMTP e webhook con firma HMAC-SHA256</p>
+      <InfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Notifications — Guida"
+        sections={INFO_SECTIONS}
+      />
+
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Notifications</h1>
+          <p className="text-gray-400 text-sm mt-1">Alert in-app, email SMTP e webhook con firma HMAC-SHA256</p>
+        </div>
+        <button
+          onClick={() => setShowInfo(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
+        >
+          <span>ⓘ</span> Info
+        </button>
       </div>
 
       <div className="flex border-b border-corvin-700 mb-6 gap-1">

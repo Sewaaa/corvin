@@ -10,6 +10,7 @@ import EmailProtection from './pages/EmailProtection';
 import FileSandbox from './pages/FileSandbox';
 import Notifications from './pages/Notifications';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="sandbox" element={<FileSandbox />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

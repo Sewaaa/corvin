@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, health, organizations, users
+from app.api.v1.endpoints import audit, auth, health, organizations, users
 from app.modules.breach_monitor.router import router as breach_router
 from app.modules.domain_reputation.router import router as domain_router
 from app.modules.web_scanner.router import router as web_scan_router
@@ -22,3 +22,4 @@ api_router.include_router(email_router, prefix="/email", tags=["email"])
 api_router.include_router(sandbox_router, prefix="/sandbox", tags=["sandbox"])
 api_router.include_router(notifications_router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(reports_router, prefix="/reports", tags=["reports"])
+api_router.include_router(audit.router, prefix="/audit", tags=["audit"])

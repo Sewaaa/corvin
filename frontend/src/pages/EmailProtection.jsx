@@ -4,6 +4,51 @@ import { email as emailApi } from '../api/email';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
+import InfoModal from '../components/InfoModal';
+
+const INFO_SECTIONS = [
+  {
+    heading: 'Cos\'è',
+    text: 'Email Protection connette account IMAP e analizza le email ricevute alla ricerca di phishing, spoofing e anomalie SPF/DKIM/DMARC. Le password sono cifrate con Fernet e non vengono mai esposte.',
+  },
+  {
+    heading: 'Come si usa',
+    items: [
+      'Clicca <strong>+ Aggiungi account</strong> e inserisci le credenziali IMAP.',
+      'La connessione IMAP viene testata prima del salvataggio: se fallisce nulla viene salvato.',
+      'Clicca <strong>▶ Avvia scan</strong> per analizzare le ultime email della inbox.',
+      'Se vengono rilevate minacce, compare il bottone <strong>▼ Vedi minacce</strong> con il conteggio.',
+      'Dal pannello minacce puoi <strong>mettere in quarantena</strong> o <strong>rilasciare</strong> una email.',
+    ],
+  },
+  {
+    heading: 'Setup Gmail (test rapido)',
+    items: [
+      { label: 'IMAP Host', value: 'imap.gmail.com' },
+      { label: 'Porta', value: '993' },
+      { label: 'SSL', value: 'abilitato' },
+      { label: 'Password', value: 'usa un\'App Password (non la password Google)' },
+      { label: 'Come ottenere App Password', value: 'myaccount.google.com → Sicurezza → Verifica in 2 passaggi → App Password' },
+    ],
+  },
+  {
+    heading: 'Altri provider',
+    items: [
+      { label: 'Outlook / Office 365', value: 'outlook.office365.com : 993' },
+      { label: 'Yahoo Mail', value: 'imap.mail.yahoo.com : 993' },
+      { label: 'Provider generico', value: 'chiedi all\'admin il server IMAP e la porta' },
+    ],
+  },
+  {
+    heading: 'Cosa rileva',
+    items: [
+      'Phishing: link sospetti, domini typosquatting, urgency language.',
+      'Spoofing: From != MAIL FROM, SPF/DKIM/DMARC fail.',
+      'Malware hint: allegati .exe, .js, .bat, script inline.',
+      'Ogni minaccia ha severity: low / medium / high / critical.',
+    ],
+  },
+];
 
 // ── Pannello minacce di un singolo account ────────────────────────────────────
 function ThreatPanel({ emailAddress, onClose }) {
@@ -194,6 +239,7 @@ export default function EmailProtection() {
 
   const [form, setForm] = useState({ email_address: '', imap_host: '', imap_port: 993, password: '', use_ssl: true });
   const [showForm, setShowForm] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [scanningId, setScanningId] = useState(null);
@@ -256,9 +302,24 @@ export default function EmailProtection() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Email Protection</h1>
-        <p className="text-gray-400 text-sm mt-1">IMAP scan, phishing detection, SPF/DKIM/DMARC analysis</p>
+      <InfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Email Protection — Guida"
+        sections={INFO_SECTIONS}
+      />
+
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Email Protection</h1>
+          <p className="text-gray-400 text-sm mt-1">IMAP scan, phishing detection, SPF/DKIM/DMARC analysis</p>
+        </div>
+        <button
+          onClick={() => setShowInfo(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
+        >
+          <span>ⓘ</span> Info
+        </button>
       </div>
 
       {pageError && <p className="text-red-400 text-sm mb-4">⚠ {pageError}</p>}
