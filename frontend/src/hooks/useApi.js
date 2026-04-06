@@ -16,8 +16,10 @@ export function useApi(fetchFn, deps = []) {
     try {
       const result = await fetchFn();
       setData(result);
+      return result;
     } catch (err) {
       setError(err.message ?? 'Errore sconosciuto');
+      return null;
     } finally {
       setLoading(false);
     }

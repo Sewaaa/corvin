@@ -62,9 +62,15 @@ export default function DomainReputation() {
     setActionError('');
     try {
       await domainApi.scan(id);
-      // scan runs in background — wait 3s then refetch
-      await new Promise((r) => setTimeout(r, 10000));
-      await refetch();
+      // Poll every 3s for up to 30s waiting for background scan to complete
+      let found = false;
+      for (let i = 0; i < 10; i++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const updated = await refetch();
+        const domain = (updated ?? []).find((d) => d.id === id);
+        if (domain?.last_scan_at) { found = true; break; }
+      }
+      if (!found) await refetch();
     } catch (err) {
       const msg = err.message ?? '';
       if (msg.toLowerCase().includes('must be verified')) {
