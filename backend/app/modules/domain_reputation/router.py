@@ -201,22 +201,31 @@ async def scan_domain_now(
 
 async def _run_scan_background(domain_id: str, user_id: str) -> None:
     """Esegue il scan in background con una sessione DB indipendente."""
+    import uuid as _uuid
     from app.core.database import AsyncSessionLocal
     from sqlalchemy import select
-    import logging
-    _logger = logging.getLogger(__name__)
 
     try:
+        logger.info("domain_scan_bg_start", domain_id=domain_id)
         async with AsyncSessionLocal() as db:
-            result = await db.execute(select(Domain).where(Domain.id == domain_id))
+            result = await db.execute(
+                select(Domain).where(Domain.id == _uuid.UUID(domain_id))
+            )
             domain_obj = result.scalar_one_or_none()
-            if domain_obj:
-                import uuid as _uuid
-                await run_domain_scan(db, domain_obj=domain_obj,
-                                      requesting_user_id=_uuid.UUID(user_id))
-                await db.commit()
+            if domain_obj is None:
+                logger.error("domain_scan_bg_not_found", domain_id=domain_id)
+                return
+            logger.info("domain_scan_bg_running", domain=domain_obj.domain)
+            await run_domain_scan(
+                db, domain_obj=domain_obj,
+                requesting_user_id=_uuid.UUID(user_id),
+            )
+            await db.commit()
+            logger.info("domain_scan_bg_done", domain=domain_obj.domain,
+                        score=domain_obj.reputation_score)
     except Exception as exc:
-        _logger.error("domain_scan_background_failed", domain_id=domain_id, error=str(exc))
+        logger.error("domain_scan_bg_failed", domain_id=domain_id, error=str(exc),
+                     exc_info=True)
 
 
 @router.delete("/{domain_id}", status_code=status.HTTP_204_NO_CONTENT)
