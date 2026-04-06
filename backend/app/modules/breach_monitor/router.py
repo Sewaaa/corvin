@@ -13,7 +13,7 @@ from typing import List
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import audit
@@ -257,6 +257,10 @@ async def remove_monitored_email(
     if monitored is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Email not found")
 
+    # Elimina prima i BreachRecord correlati (evita lazy-load in async)
+    await db.execute(
+        delete(BreachRecord).where(BreachRecord.monitored_email_id == monitored.id)
+    )
     await db.delete(monitored)
 
     await audit(
