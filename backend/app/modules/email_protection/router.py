@@ -15,7 +15,7 @@ from typing import List, Optional
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -187,6 +187,7 @@ async def delete_account(
 )
 async def trigger_scan(
     account_id: UUID,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     org: Organization = Depends(get_current_org),
@@ -195,8 +196,8 @@ async def trigger_scan(
     if not account.is_active:
         raise HTTPException(status_code=400, detail="Account non attivo")
 
-    from app.modules.email_protection.tasks import scan_email_account_task
-    scan_email_account_task.delay(str(account.id))
+    from app.modules.email_protection.tasks import _scan_account_async
+    background_tasks.add_task(_scan_account_async, str(account.id))
 
     logger.info("email_scan_triggered", account_id=str(account_id))
     return {"status": "queued", "account_id": str(account_id)}

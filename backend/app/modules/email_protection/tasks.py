@@ -29,22 +29,31 @@ def scan_email_account_task(self, account_id: str) -> dict:
 
 
 async def _scan_account_async(account_id: str) -> dict:
+    import uuid as _uuid
     from app.core.database import AsyncSessionLocal
     from app.models.email_account import EmailAccount
     from app.modules.email_protection.service import scan_email_account
     from sqlalchemy import select
 
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            select(EmailAccount).where(EmailAccount.id == account_id)
-        )
-        account = result.scalar_one_or_none()
-        if account is None:
-            return {"status": "not_found"}
-        if not account.is_active:
-            return {"status": "skipped", "reason": "account_inactive"}
+    try:
+        logger.info("email_scan_bg_start", account_id=account_id)
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(EmailAccount).where(EmailAccount.id == _uuid.UUID(account_id))
+            )
+            account = result.scalar_one_or_none()
+            if account is None:
+                logger.error("email_scan_bg_not_found", account_id=account_id)
+                return {"status": "not_found"}
+            if not account.is_active:
+                return {"status": "skipped", "reason": "account_inactive"}
 
-        return await scan_email_account(db, account)
+            result = await scan_email_account(db, account)
+            logger.info("email_scan_bg_done", account_id=account_id)
+            return result
+    except Exception as exc:
+        logger.error("email_scan_bg_failed", account_id=account_id, error=str(exc), exc_info=True)
+        return {"status": "error"}
 
 
 @celery_app.task(
