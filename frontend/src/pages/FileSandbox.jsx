@@ -15,8 +15,8 @@ const INFO_SECTIONS = [
     heading: 'Come si usa',
     items: [
       'Trascina un file nella drop zone oppure clicca per selezionarlo.',
-      'L\'analisi parte in background: attendi che lo stato passi da <em>analyzing</em> a un risultato.',
-      'Il risultato può essere: <strong>safe</strong>, <strong>suspicious</strong> o <strong>malicious</strong>.',
+      'L\'analisi parte in background: attendi che lo stato passi da <em>analisi</em> a un risultato.',
+      'Il risultato può essere: <strong>Sicuro</strong>, <strong>Sospetto</strong> o <strong>Malevolo</strong>.',
       'Clicca su un file per vedere i dettagli: match YARA, score VirusTotal, entropia.',
     ],
   },
@@ -48,8 +48,10 @@ function DropZone({ onFile }) {
 
   return (
     <div
-      className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer mb-6 ${
-        drag ? 'border-corvin-accent bg-corvin-accent/5' : 'border-corvin-700 hover:border-corvin-accent/50'
+      className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer mb-6 ${
+        drag
+          ? 'border-blue-500 bg-blue-50'
+          : 'border-corvin-200 hover:border-blue-300 hover:bg-corvin-50 bg-white'
       }`}
       onClick={() => input.current.click()}
       onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
@@ -57,10 +59,15 @@ function DropZone({ onFile }) {
       onDrop={(e) => { e.preventDefault(); setDrag(false); handle(e.dataTransfer.files[0]); }}
     >
       <input ref={input} type="file" className="hidden" onChange={(e) => handle(e.target.files[0])} />
-      <p className="text-gray-400 text-sm">
-        Trascina un file qui, oppure <span className="text-corvin-accent">clicca per selezionare</span>
-      </p>
-      <p className="text-xs text-gray-600 mt-1">Max 10 MB · YARA + VirusTotal hash lookup</p>
+      <div className="flex flex-col items-center gap-2">
+        <svg className={`w-8 h-8 ${drag ? 'text-blue-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        <p className="text-sm text-gray-600">
+          Trascina un file qui, oppure <span className="text-blue-600 font-medium">clicca per selezionare</span>
+        </p>
+        <p className="text-xs text-gray-400">Max 10 MB · YARA + VirusTotal hash lookup</p>
+      </div>
     </div>
   );
 }
@@ -72,7 +79,7 @@ function YaraMatches({ matches }) {
       {matches.map((m, i) => (
         <div key={i} className="flex items-center gap-2">
           <SeverityBadge value={m.severity} />
-          <span className="text-xs text-white">{m.rule}</span>
+          <span className="text-xs text-gray-900 font-medium">{m.rule}</span>
           <span className="text-xs text-gray-500">· {m.description}</span>
         </div>
       ))}
@@ -96,7 +103,6 @@ export default function FileSandbox() {
       fd.append('file', file);
       const uploaded = await sandboxApi.upload(fd);
       refetch();
-      // Poll ogni 3s per max 45s in attesa che l'analisi background completi
       if (uploaded?.id) {
         for (let i = 0; i < 15; i++) {
           await new Promise((r) => setTimeout(r, 3000));
@@ -144,32 +150,30 @@ export default function FileSandbox() {
 
   return (
     <div>
-      <InfoModal
-        open={showInfo}
-        onClose={() => setShowInfo(false)}
-        title="File Sandbox — Guida"
-        sections={INFO_SECTIONS}
-      />
+      <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="File Sandbox — Guida" sections={INFO_SECTIONS} />
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">File Sandbox</h1>
-          <p className="text-gray-400 text-sm mt-1">Analisi statica: YARA, VirusTotal hash, entropia, PE parsing</p>
+          <h1 className="text-2xl font-bold text-gray-900">File Sandbox</h1>
+          <p className="text-gray-500 text-sm mt-1">Analisi statica: YARA, VirusTotal hash, entropia, PE parsing</p>
         </div>
-        <button
-          onClick={() => setShowInfo(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
-        >
-          <span>ⓘ</span> Info
+        <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
+          Guida
         </button>
       </div>
 
       <DropZone onFile={handleFile} />
-      {uploading && <p className="text-sm text-corvin-accent mb-4 animate-pulse">Upload in corso…</p>}
-      {uploadError && <p className="text-red-400 text-sm mb-4">{uploadError}</p>}
+      {uploading && (
+        <div className="flex items-center gap-2 text-sm text-blue-600 mb-4 animate-pulse">
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+          Upload e analisi in corso…
+        </div>
+      )}
+      {uploadError && <p className="text-red-600 text-sm mb-4">{uploadError}</p>}
 
       {loading && <LoadingSpinner />}
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {!loading && files?.length === 0 && (
         <EmptyState title="Nessun file analizzato" description="Carica un file per avviare l'analisi." />
@@ -178,22 +182,22 @@ export default function FileSandbox() {
       {!loading && files?.length > 0 && (
         <div className="space-y-2">
           {files.map((f) => (
-            <div key={f.id} className="bg-corvin-800 border border-corvin-700 rounded-xl">
+            <div key={f.id} className="bg-white rounded-xl shadow-card border border-corvin-200">
               <div
-                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-corvin-700/30"
+                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-corvin-50 rounded-xl"
                 onClick={() => handleDetail(f.id)}
               >
                 <div className="flex items-center gap-3">
                   <SeverityBadge value={f.status} />
-                  <span className="text-sm text-white font-mono">{f.original_filename}</span>
-                  <span className="text-xs text-gray-500">{formatSize(f.file_size)}</span>
+                  <span className="text-sm text-gray-900 font-medium font-mono">{f.original_filename}</span>
+                  <span className="text-xs text-gray-400">{formatSize(f.file_size)}</span>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-xs text-gray-500">{new Date(f.created_at).toLocaleString('it-IT')}</span>
+                  <span className="text-xs text-gray-400">{new Date(f.created_at).toLocaleString('it-IT')}</span>
                   <button
                     onClick={(e) => handleRemove(e, f.id)}
                     disabled={removingId === f.id}
-                    className="text-xs text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                    className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
                   >
                     {removingId === f.id ? '...' : '✕'}
                   </button>
@@ -201,20 +205,20 @@ export default function FileSandbox() {
               </div>
 
               {detail?.id === f.id && (
-                <div className="border-t border-corvin-700 px-4 py-3 space-y-3">
+                <div className="border-t border-corvin-100 px-4 py-3 space-y-3">
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-400">SHA-256: </span>
-                      <code className="text-gray-300 break-all">{detail.sha256_hash}</code>
+                      <span className="text-gray-500 font-medium">SHA-256: </span>
+                      <code className="text-gray-700 break-all">{detail.sha256_hash}</code>
                     </div>
                     <div>
-                      <span className="text-gray-400">MIME: </span>
-                      <span className="text-white">{detail.mime_type ?? '—'}</span>
+                      <span className="text-gray-500 font-medium">MIME: </span>
+                      <span className="text-gray-900">{detail.mime_type ?? '—'}</span>
                     </div>
                     {detail.metadata_extracted?.entropy != null && (
                       <div>
-                        <span className="text-gray-400">Entropia: </span>
-                        <span className={detail.metadata_extracted.high_entropy ? 'text-red-400' : 'text-white'}>
+                        <span className="text-gray-500 font-medium">Entropia: </span>
+                        <span className={detail.metadata_extracted.high_entropy ? 'text-red-600 font-semibold' : 'text-gray-900'}>
                           {detail.metadata_extracted.entropy}
                           {detail.metadata_extracted.high_entropy && ' ⚠ alta'}
                         </span>
@@ -222,8 +226,8 @@ export default function FileSandbox() {
                     )}
                     {detail.virustotal_result && (
                       <div>
-                        <span className="text-gray-400">VirusTotal: </span>
-                        <span className={detail.virustotal_result.detections > 0 ? 'text-red-400' : 'text-green-400'}>
+                        <span className="text-gray-500 font-medium">VirusTotal: </span>
+                        <span className={detail.virustotal_result.detections > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
                           {detail.virustotal_result.status === 'not_found'
                             ? 'non trovato'
                             : `${detail.virustotal_result.detections}/${detail.virustotal_result.total}`}
@@ -233,16 +237,16 @@ export default function FileSandbox() {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400 font-medium mb-1">YARA matches</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">YARA matches</p>
                     <YaraMatches matches={detail.yara_matches} />
                   </div>
 
                   {detail.metadata_extracted?.suspicious_strings?.length > 0 && (
                     <div>
-                      <p className="text-xs text-gray-400 font-medium mb-1">Stringhe sospette</p>
-                      <div className="bg-corvin-700/50 rounded p-2 max-h-24 overflow-y-auto">
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Stringhe sospette</p>
+                      <div className="bg-gray-900 rounded-lg p-2.5 max-h-24 overflow-y-auto">
                         {detail.metadata_extracted.suspicious_strings.map((s, i) => (
-                          <code key={i} className="block text-xs text-yellow-400">{s}</code>
+                          <code key={i} className="block text-xs text-amber-400 font-mono">{s}</code>
                         ))}
                       </div>
                     </div>

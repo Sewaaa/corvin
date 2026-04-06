@@ -34,7 +34,7 @@ const INFO_SECTIONS = [
     items: [
       'La scansione fa max 20 richieste HTTP GET passive.',
       'Controlla: redirect HTTP→HTTPS, HSTS, CSP, X-Content-Type-Options, X-Frame-Options, cookie Secure/HttpOnly.',
-      'I finding hanno severity: info / low / medium / high / critical.',
+      'I finding hanno severity: info / basso / medio / alto / critico.',
     ],
   },
 ];
@@ -124,167 +124,104 @@ export default function WebScanner() {
 
   return (
     <div>
-      <InfoModal
-        open={showInfo}
-        onClose={() => setShowInfo(false)}
-        title="Web Scanner — Guida"
-        sections={INFO_SECTIONS}
-      />
+      <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="Web Scanner — Guida" sections={INFO_SECTIONS} />
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Web Scanner</h1>
-          <p className="text-gray-400 text-sm mt-1">Scansione passiva — max 20 richieste, nessun payload intrusivo</p>
+          <h1 className="text-2xl font-bold text-gray-900">Web Scanner</h1>
+          <p className="text-gray-500 text-sm mt-1">Scansione passiva — max 20 richieste, nessun payload intrusivo</p>
         </div>
-        <button
-          onClick={() => setShowInfo(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
-        >
-          <span>ⓘ</span> Info
+        <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
+          Guida
         </button>
       </div>
 
-      {/* Start scan */}
       <form onSubmit={handleStart} className="flex flex-wrap gap-3 mb-6">
-        <select
-          value={selectedDomain}
-          onChange={(e) => setSelectedDomain(e.target.value)}
-          className="flex-1 min-w-[200px] bg-corvin-800 border border-corvin-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-corvin-accent"
-        >
+        <select value={selectedDomain} onChange={(e) => setSelectedDomain(e.target.value)} className="form-select flex-1 min-w-[200px]">
           <option value="">Seleziona un dominio verificato…</option>
           {verifiedDomains.map((d) => (
             <option key={d.id} value={d.id}>{d.domain}</option>
           ))}
         </select>
-        <select
-          value={frequency}
-          onChange={(e) => setFrequency(e.target.value)}
-          className="bg-corvin-800 border border-corvin-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-corvin-accent"
-        >
+        <select value={frequency} onChange={(e) => setFrequency(e.target.value)} className="form-select">
           <option value="manual">Una tantum</option>
           <option value="daily">Giornaliera</option>
           <option value="weekly">Settimanale</option>
           <option value="monthly">Mensile</option>
         </select>
-        <button
-          type="submit"
-          disabled={starting || !selectedDomain}
-          className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg hover:bg-corvin-accent/90 disabled:opacity-50"
-        >
-          {starting ? 'Avvio…' : '▶ Avvia scan'}
+        <button type="submit" disabled={starting || !selectedDomain} className="btn-primary">
+          {starting ? 'Avvio in corso…' : '▶ Avvia scan'}
         </button>
       </form>
-      {startError && <p className="text-red-400 text-sm mb-4">{startError}</p>}
-      {detailError && <p className="text-red-400 text-sm mb-4">⚠ {detailError}</p>}
 
+      {startError && <p className="text-red-600 text-sm mb-4">{startError}</p>}
+      {detailError && <p className="text-red-600 text-sm mb-4">⚠ {detailError}</p>}
       {loading && <LoadingSpinner />}
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {!loading && scans?.length === 0 && (
-        <EmptyState
-          title="Nessuna scansione"
-          description="Aggiungi e verifica un dominio, poi avvia la prima scansione."
-        />
+        <EmptyState title="Nessuna scansione" description="Aggiungi e verifica un dominio, poi avvia la prima scansione." />
       )}
 
       {!loading && scans?.length > 0 && (
         <div className="space-y-2">
           {scans.map((s) => (
-            <div
-              key={s.id}
-              className={`bg-corvin-800 border rounded-xl transition-colors ${
-                isOpen(s.id) ? 'border-corvin-accent/50' : 'border-corvin-700'
-              }`}
-            >
-              {/* Row header */}
+            <div key={s.id} className={`bg-white rounded-xl shadow-card border transition-colors ${isOpen(s.id) ? 'border-blue-300' : 'border-corvin-200'}`}>
               <div
-                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-corvin-700/30 rounded-xl"
+                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-corvin-50 rounded-xl"
                 onClick={() => s.status === 'completed' && handleDetail(s.id)}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <SeverityBadge value={s.status} />
-                  <span className="text-sm text-white truncate">{s.target_url}</span>
+                  <span className="text-sm text-gray-900 font-medium truncate">{s.target_url}</span>
                   {s.frequency && s.frequency !== 'manual' && (
-                    <span className="text-xs bg-corvin-accent/20 text-corvin-accent px-1.5 py-0.5 rounded shrink-0">
+                    <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded shrink-0 font-medium">
                       {s.frequency === 'daily' ? 'giornaliera' : s.frequency === 'weekly' ? 'settimanale' : 'mensile'}
                     </span>
                   )}
-
-                  {/* Stato aggiuntivo inline */}
-                  {s.status === 'failed' && (
-                    <span className="text-xs text-gray-500 shrink-0">sito non raggiungibile</span>
-                  )}
+                  {s.status === 'failed' && <span className="text-xs text-gray-400 shrink-0">sito non raggiungibile</span>}
                   {s.status === 'completed' && (
                     <span className="text-xs text-gray-500 shrink-0">
-                      {s.findings_count > 0
-                        ? `${s.findings_count} finding${s.findings_count > 1 ? 's' : ''}`
-                        : 'nessun finding'}
-                      {' · '}
-                      {s.critical_count > 0 && <span className="text-red-400">{s.critical_count} critici</span>}
-                      {s.high_count > 0 && s.critical_count === 0 && <span className="text-orange-400">{s.high_count} high</span>}
+                      {s.findings_count > 0 ? `${s.findings_count} finding` : 'nessun finding'}
+                      {s.critical_count > 0 && <span className="text-red-600 ml-1">· {s.critical_count} critici</span>}
+                      {s.high_count > 0 && s.critical_count === 0 && <span className="text-orange-600 ml-1">· {s.high_count} alti</span>}
                     </span>
                   )}
                 </div>
-
                 <div className="flex items-center gap-3 shrink-0 ml-3">
-                  <span className="text-xs text-gray-500">
-                    {new Date(s.created_at).toLocaleString('it-IT')}
-                  </span>
-
-                  {/* Bottone Riprova */}
+                  <span className="text-xs text-gray-400">{new Date(s.created_at).toLocaleString('it-IT')}</span>
                   {(s.status === 'pending' || s.status === 'failed') && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleRetry(s); }}
-                      disabled={retryingId === s.id}
-                      className="text-xs text-corvin-accent hover:underline disabled:opacity-50"
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); handleRetry(s); }} disabled={retryingId === s.id} className="text-xs text-blue-600 hover:underline disabled:opacity-50 font-medium">
                       {retryingId === s.id ? 'Avvio…' : '↺ Riprova'}
                     </button>
                   )}
-
-                  {/* Freccia apri/chiudi per completed */}
-                  {s.status === 'completed' && (
-                    <span className="text-xs text-gray-400">
-                      {isOpen(s.id) ? '▲' : '▼ dettagli'}
-                    </span>
-                  )}
-
-                  {/* Bottone rimuovi */}
-                  <button
-                    onClick={(e) => handleRemove(e, s.id)}
-                    disabled={removingId === s.id}
-                    className="text-xs text-gray-500 hover:text-red-400 transition-colors disabled:opacity-40"
-                    title="Rimuovi scansione"
-                  >
+                  {s.status === 'completed' && <span className="text-xs text-gray-400">{isOpen(s.id) ? '▲' : '▼ dettagli'}</span>}
+                  <button onClick={(e) => handleRemove(e, s.id)} disabled={removingId === s.id} className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40">
                     {removingId === s.id ? '…' : '✕'}
                   </button>
                 </div>
               </div>
 
-              {/* Detail panel */}
               {isOpen(s.id) && (
-                <div className="border-t border-corvin-700 px-4 py-3">
+                <div className="border-t border-corvin-100 px-4 py-3">
                   <div className="flex gap-4 mb-3 text-xs">
                     {['critical', 'high', 'medium', 'low', 'info'].map((sev) => (
-                      <span key={sev} className="text-gray-400">
-                        <span className="text-white font-medium">{detail.summary?.[sev] ?? 0}</span> {sev}
+                      <span key={sev} className="text-gray-500">
+                        <span className="text-gray-900 font-semibold">{detail.summary?.[sev] ?? 0}</span> {sev}
                       </span>
                     ))}
                   </div>
-                  {detail.findings?.length === 0 && (
-                    <p className="text-xs text-gray-500">Nessun finding rilevato.</p>
-                  )}
+                  {detail.findings?.length === 0 && <p className="text-sm text-gray-500">Nessun finding rilevato.</p>}
                   <div className="space-y-2">
                     {detail.findings?.map((f, i) => (
-                      <div key={i} className="bg-corvin-700/50 rounded-lg px-3 py-2">
+                      <div key={i} className="bg-corvin-50 rounded-lg px-3 py-2 border border-corvin-100">
                         <div className="flex items-center gap-2 mb-0.5">
                           <SeverityBadge value={f.severity} />
-                          <span className="text-sm text-white">{f.title}</span>
+                          <span className="text-sm text-gray-900 font-medium">{f.title}</span>
                         </div>
-                        <p className="text-xs text-gray-400">{f.description}</p>
-                        {f.recommendation && (
-                          <p className="text-xs text-corvin-accent mt-1">↳ {f.recommendation}</p>
-                        )}
+                        <p className="text-xs text-gray-500">{f.description}</p>
+                        {f.recommendation && <p className="text-xs text-blue-600 mt-1">↳ {f.recommendation}</p>}
                       </div>
                     ))}
                   </div>

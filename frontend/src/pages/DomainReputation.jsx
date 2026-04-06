@@ -14,7 +14,7 @@ const INFO_SECTIONS = [
   {
     heading: 'Come si usa',
     items: [
-      'Inserisci un dominio (es. <code class="text-yellow-300">example.com</code>) e clicca <strong>+ Aggiungi</strong>.',
+      'Inserisci un dominio (es. <code class="text-blue-600">example.com</code>) e clicca <strong>+ Aggiungi</strong>.',
       'Il sistema genera un <strong>token di verifica TXT</strong>: aggiungilo al DNS del dominio come record TXT per confermare la proprietà.',
       'Clicca <strong>Verifica</strong> quando il record DNS si è propagato (max 48h, di solito pochi minuti).',
       'Dopo la verifica, clicca <strong>Scansiona</strong> per avviare l\'analisi completa.',
@@ -40,13 +40,14 @@ const INFO_SECTIONS = [
 ];
 
 function ScoreBar({ score }) {
-  const color = score >= 80 ? 'bg-green-500' : score >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+  const color = score >= 80 ? 'bg-green-500' : score >= 50 ? 'bg-amber-500' : 'bg-red-500';
+  const textColor = score >= 80 ? 'text-green-700' : score >= 50 ? 'text-amber-700' : 'text-red-700';
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-corvin-700 rounded-full overflow-hidden">
-        <div className={`h-full ${color} rounded-full`} style={{ width: `${score}%` }} />
+    <div className="flex items-center gap-3">
+      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${score}%` }} />
       </div>
-      <span className="text-xs text-gray-400 w-8 text-right">{score}</span>
+      <span className={`text-sm font-semibold w-8 text-right ${textColor}`}>{score}</span>
     </div>
   );
 }
@@ -97,21 +98,18 @@ export default function DomainReputation() {
     setActionError('');
     try {
       await domainApi.scan(id);
-      // Poll every 3s for up to 30s waiting for background scan to complete
       let found = false;
       for (let i = 0; i < 10; i++) {
         await new Promise((r) => setTimeout(r, 3000));
         const updated = await refetch();
-        const domain = (updated ?? []).find((d) => d.id === id);
-        if (domain?.last_scan_at) { found = true; break; }
+        const d = (updated ?? []).find((d) => d.id === id);
+        if (d?.last_scan_at) { found = true; break; }
       }
       if (!found) await refetch();
     } catch (err) {
       const msg = err.message ?? '';
       if (msg.toLowerCase().includes('must be verified')) {
         setActionError('Devi prima verificare il dominio prima di poterlo scansionare.');
-      } else if (msg.toLowerCase().includes('not found')) {
-        setActionError('Dominio non trovato.');
       } else {
         setActionError('Si è verificato un errore. Riprova più tardi.');
       }
@@ -127,79 +125,67 @@ export default function DomainReputation() {
 
   return (
     <div>
-      <InfoModal
-        open={showInfo}
-        onClose={() => setShowInfo(false)}
-        title="Domain Reputation — Guida"
-        sections={INFO_SECTIONS}
-      />
+      <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="Domain Reputation — Guida" sections={INFO_SECTIONS} />
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Domain Reputation</h1>
-          <p className="text-gray-400 text-sm mt-1">DNS health, DNSBL, SSL e WHOIS analysis</p>
+          <h1 className="text-2xl font-bold text-gray-900">Domain Reputation</h1>
+          <p className="text-gray-500 text-sm mt-1">Analisi DNS, blacklist, certificato SSL e WHOIS</p>
         </div>
-        <button
-          onClick={() => setShowInfo(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
-        >
-          <span>ⓘ</span> Info
+        <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
+          Guida
         </button>
       </div>
 
-      <form onSubmit={handleAdd} className="flex gap-3 mb-6">
+      <form onSubmit={handleAdd} className="flex gap-3 mb-4">
         <input
           type="text"
           placeholder="example.com"
           value={newDomain}
           onChange={(e) => setNewDomain(e.target.value)}
           required
-          className="flex-1 bg-corvin-800 border border-corvin-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-corvin-accent"
+          className="form-input flex-1"
         />
-        <button
-          type="submit"
-          disabled={adding}
-          className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg hover:bg-corvin-accent/90 disabled:opacity-50"
-        >
+        <button type="submit" disabled={adding} className="btn-primary whitespace-nowrap">
           {adding ? 'Aggiunta…' : '+ Aggiungi'}
         </button>
       </form>
-      {addError && <p className="text-red-400 text-sm mb-4">{addError}</p>}
-      {actionError && <p className="text-red-400 text-sm mb-4">{actionError}</p>}
+      {addError && <p className="text-sm text-red-600 mb-4">{addError}</p>}
+      {actionError && <p className="text-sm text-red-600 mb-4">{actionError}</p>}
 
       {loading && <LoadingSpinner />}
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {!loading && domains?.length === 0 && (
-        <EmptyState
-          title="Nessun dominio monitorato"
-          description="Aggiungi un dominio e verificalo con il record DNS TXT."
-        />
+        <EmptyState title="Nessun dominio monitorato" description="Aggiungi un dominio e verificalo con il record DNS TXT." />
       )}
 
       {!loading && domains?.length > 0 && (
         <div className="space-y-3">
           {domains.map((d) => (
-            <div key={d.id} className="bg-corvin-800 border border-corvin-700 rounded-xl p-4">
+            <div key={d.id} className="bg-white rounded-xl shadow-card border border-corvin-200 p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-white">{d.domain}</span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-semibold text-gray-900">{d.domain}</span>
                     <SeverityBadge value={d.is_verified ? 'verified' : 'unverified'} />
                   </div>
                   {d.reputation_score != null && (
-                    <div className="max-w-xs">
+                    <div className="max-w-xs mb-2">
+                      <p className="text-xs text-gray-500 mb-1">Punteggio reputazione</p>
                       <ScoreBar score={d.reputation_score} />
                     </div>
                   )}
                   {d.verification_token && !d.is_verified && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      TXT: <code className="text-yellow-400">{d.verification_token}</code>
-                    </p>
+                    <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-xs text-amber-700 font-medium mb-1">Aggiungi questo record TXT al DNS del dominio:</p>
+                      <code className="text-xs text-amber-800 font-mono break-all">{d.verification_token}</code>
+                    </div>
                   )}
                   {d.last_scan_at && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Ultima scan: {new Date(d.last_scan_at).toLocaleString('it-IT')}
+                    <p className="text-xs text-gray-400 mt-1">
+                      Ultima scansione: {new Date(d.last_scan_at).toLocaleString('it-IT')}
                     </p>
                   )}
                 </div>
@@ -208,7 +194,7 @@ export default function DomainReputation() {
                     <button
                       onClick={() => handleVerify(d.id)}
                       disabled={busyId === d.id}
-                      className="text-xs text-corvin-accent hover:underline disabled:opacity-50"
+                      className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
                     >
                       Verifica
                     </button>
@@ -217,25 +203,22 @@ export default function DomainReputation() {
                     <button
                       onClick={() => handleScan(d.id)}
                       disabled={busyId === d.id}
-                      className="text-xs text-corvin-accent hover:underline disabled:opacity-50"
+                      className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
                     >
                       {scanningId === d.id ? 'Scansione in corso…' : 'Scansiona'}
                     </button>
                   )}
-                  <button
-                    onClick={() => handleDelete(d.id)}
-                    className="text-xs text-red-400 hover:underline"
-                  >
+                  <button onClick={() => handleDelete(d.id)} className="text-xs font-medium text-red-500 hover:text-red-700">
                     Rimuovi
                   </button>
                 </div>
               </div>
               {d.scan_findings?.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-corvin-700 space-y-1">
+                <div className="mt-3 pt-3 border-t border-corvin-100 space-y-1.5">
                   {d.scan_findings.map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs">
                       <SeverityBadge value={f.severity} />
-                      <span className="text-gray-300">{f.title ?? f.message ?? f.check}</span>
+                      <span className="text-gray-700">{f.title ?? f.message ?? f.check}</span>
                     </div>
                   ))}
                 </div>

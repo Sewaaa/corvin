@@ -39,18 +39,8 @@ const INFO_SECTIONS = [
       { label: 'Provider generico', value: 'chiedi all\'admin il server IMAP e la porta' },
     ],
   },
-  {
-    heading: 'Cosa rileva',
-    items: [
-      'Phishing: link sospetti, domini typosquatting, urgency language.',
-      'Spoofing: From != MAIL FROM, SPF/DKIM/DMARC fail.',
-      'Malware hint: allegati .exe, .js, .bat, script inline.',
-      'Ogni minaccia ha severity: low / medium / high / critical.',
-    ],
-  },
 ];
 
-// ── Pannello minacce di un singolo account ────────────────────────────────────
 function ThreatPanel({ emailAddress, onClose }) {
   const { data, loading, error, refetch } = useApi(
     () => emailApi.listThreatsByAccount(emailAddress),
@@ -71,56 +61,54 @@ function ThreatPanel({ emailAddress, onClose }) {
   const threats = data?.items ?? [];
 
   return (
-    <div className="border-t border-corvin-700 mt-3 pt-3">
+    <div className="border-t border-corvin-100 mt-3 pt-3">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-          Minacce rilevate
-        </span>
-        <button onClick={onClose} className="text-xs text-gray-500 hover:text-white">✕ Chiudi</button>
+        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Minacce rilevate</span>
+        <button onClick={onClose} className="text-xs text-gray-400 hover:text-gray-700 font-medium">✕ Chiudi</button>
       </div>
 
-      {actionError && <p className="text-red-400 text-xs mb-2">⚠ {actionError}</p>}
+      {actionError && <p className="text-red-600 text-xs mb-2">⚠ {actionError}</p>}
       {loading && <p className="text-xs text-gray-500 py-2">Caricamento…</p>}
-      {error && <p className="text-red-400 text-xs py-2">{error}</p>}
+      {error && <p className="text-red-600 text-xs py-2">{error}</p>}
 
       {!loading && threats.length === 0 && (
-        <p className="text-xs text-gray-500 py-2">Nessuna minaccia trovata per questo account.</p>
+        <p className="text-sm text-gray-500 py-2">Nessuna minaccia trovata per questo account.</p>
       )}
 
       {!loading && threats.length > 0 && (
         <div className="space-y-2">
           {threats.map((t) => (
-            <div key={t.id} className="bg-corvin-700/40 rounded-lg px-3 py-2">
+            <div key={t.id} className="bg-corvin-50 rounded-lg px-3 py-2 border border-corvin-100">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <SeverityBadge value={t.severity} />
-                    <span className="text-xs text-white font-medium">{t.threat_type}</span>
+                    <span className="text-xs text-gray-900 font-semibold">{t.threat_type}</span>
                     {t.is_quarantined && (
-                      <span className="text-xs bg-yellow-900/50 text-yellow-400 px-2 py-0.5 rounded-full">quarantena</span>
+                      <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-medium">In quarantena</span>
                     )}
                     {t.is_released && (
-                      <span className="text-xs bg-green-900/50 text-green-400 px-2 py-0.5 rounded-full">rilasciata</span>
+                      <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">Rilasciata</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 truncate">Da: {t.sender}</p>
-                  {t.subject && <p className="text-xs text-gray-500 truncate">Oggetto: {t.subject}</p>}
+                  <p className="text-xs text-gray-500 truncate">Da: {t.sender}</p>
+                  {t.subject && <p className="text-xs text-gray-400 truncate">Oggetto: {t.subject}</p>}
                   {t.detection_reasons?.length > 0 && (
-                    <p className="text-xs text-gray-600 mt-0.5">↳ {t.detection_reasons.join(', ')}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">↳ {t.detection_reasons.join(', ')}</p>
                   )}
                   <div className="flex gap-3 mt-1 text-xs">
                     {t.spf_result && (
-                      <span className={t.spf_result === 'pass' ? 'text-green-500' : 'text-red-400'}>
+                      <span className={t.spf_result === 'pass' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                         SPF: {t.spf_result}
                       </span>
                     )}
                     {t.dkim_result && (
-                      <span className={t.dkim_result === 'pass' ? 'text-green-500' : 'text-red-400'}>
+                      <span className={t.dkim_result === 'pass' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                         DKIM: {t.dkim_result}
                       </span>
                     )}
                     {t.dmarc_result && (
-                      <span className={t.dmarc_result === 'pass' ? 'text-green-500' : 'text-red-400'}>
+                      <span className={t.dmarc_result === 'pass' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                         DMARC: {t.dmarc_result}
                       </span>
                     )}
@@ -128,18 +116,12 @@ function ThreatPanel({ emailAddress, onClose }) {
                 </div>
                 <div className="shrink-0">
                   {!t.is_quarantined && !t.is_released && (
-                    <button
-                      onClick={() => handleAction(t.id, 'quarantine')}
-                      className="text-xs text-yellow-400 hover:underline"
-                    >
+                    <button onClick={() => handleAction(t.id, 'quarantine')} className="text-xs text-amber-600 hover:underline font-medium">
                       Quarantena
                     </button>
                   )}
                   {t.is_quarantined && (
-                    <button
-                      onClick={() => handleAction(t.id, 'release')}
-                      className="text-xs text-green-400 hover:underline"
-                    >
+                    <button onClick={() => handleAction(t.id, 'release')} className="text-xs text-green-600 hover:underline font-medium">
                       Rilascia
                     </button>
                   )}
@@ -153,51 +135,45 @@ function ThreatPanel({ emailAddress, onClose }) {
   );
 }
 
-// ── Card singolo account ──────────────────────────────────────────────────────
 function AccountCard({ account, onScan, onRemove, scanning, removing }) {
   const [showThreats, setShowThreats] = useState(false);
 
   return (
-    <div className={`bg-corvin-800 border rounded-xl px-4 py-3 transition-colors ${
-      showThreats ? 'border-corvin-accent/40' : 'border-corvin-700'
-    }`}>
-      {/* Riga principale */}
+    <div className={`bg-white rounded-xl shadow-card border transition-colors px-4 py-3 ${showThreats ? 'border-blue-300' : 'border-corvin-200'}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm text-white font-medium truncate">{account.email_address}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{account.imap_host}:{account.imap_port}</p>
+          <p className="text-sm text-gray-900 font-semibold truncate">{account.email_address}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{account.imap_host}:{account.imap_port}</p>
         </div>
         {account.threats_count > 0 ? (
-          <span className="text-xs font-semibold text-red-400 bg-red-900/30 px-2 py-0.5 rounded-full shrink-0">
-            {account.threats_count} minacce
+          <span className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full shrink-0">
+            {account.threats_count} {account.threats_count === 1 ? 'minaccia' : 'minacce'}
           </span>
         ) : (
-          <span className="text-xs text-green-500 shrink-0">✓ nessuna minaccia</span>
+          <span className="text-xs text-green-600 font-medium shrink-0">✓ nessuna minaccia</span>
         )}
       </div>
 
-      {/* Riga secondaria: stato scan + azioni */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-corvin-700/50 gap-2 flex-wrap">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-corvin-100 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           {account.last_scan_status
             ? <SeverityBadge value={account.last_scan_status === 'ok' ? 'safe' : 'failed'} />
-            : <span className="text-xs text-gray-500">Mai scansionato</span>}
+            : <span className="text-xs text-gray-400">Mai scansionato</span>}
           {account.last_scanned_at && (
-            <span className="text-xs text-gray-600">
+            <span className="text-xs text-gray-400">
               {new Date(account.last_scanned_at).toLocaleString('it-IT')}
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Vedi minacce — visibile solo se ce ne sono */}
           {account.threats_count > 0 && (
             <button
               onClick={() => setShowThreats((v) => !v)}
               className={`px-3 py-1 text-xs font-medium rounded-lg border transition-colors ${
                 showThreats
-                  ? 'bg-corvin-accent/20 text-corvin-accent border-corvin-accent/40'
-                  : 'bg-transparent text-gray-300 border-corvin-700 hover:border-corvin-accent/40 hover:text-corvin-accent'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : 'bg-white text-gray-600 border-corvin-200 hover:border-blue-300 hover:text-blue-700'
               }`}
             >
               {showThreats ? '▲ Nascondi minacce' : `▼ Vedi minacce (${account.threats_count})`}
@@ -207,7 +183,7 @@ function AccountCard({ account, onScan, onRemove, scanning, removing }) {
           <button
             onClick={() => onScan(account.id)}
             disabled={scanning}
-            className="px-3 py-1 text-xs font-medium bg-corvin-accent/20 text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/30 disabled:opacity-50 transition-colors"
+            className="px-3 py-1 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-colors"
           >
             {scanning ? '⟳ Scan in corso…' : '▶ Avvia scan'}
           </button>
@@ -215,28 +191,22 @@ function AccountCard({ account, onScan, onRemove, scanning, removing }) {
           <button
             onClick={() => onRemove(account.id)}
             disabled={removing}
-            className="text-xs text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+            className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
           >
             {removing ? '…' : '✕'}
           </button>
         </div>
       </div>
 
-      {/* Pannello minacce inline */}
       {showThreats && (
-        <ThreatPanel
-          emailAddress={account.email_address}
-          onClose={() => setShowThreats(false)}
-        />
+        <ThreatPanel emailAddress={account.email_address} onClose={() => setShowThreats(false)} />
       )}
     </div>
   );
 }
 
-// ── Pagina principale ─────────────────────────────────────────────────────────
 export default function EmailProtection() {
   const { data: accounts, loading, refetch } = useApi(() => emailApi.listAccounts());
-
   const [form, setForm] = useState({ email_address: '', imap_host: '', imap_port: 993, password: '', use_ssl: true });
   const [showForm, setShowForm] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
@@ -302,45 +272,33 @@ export default function EmailProtection() {
 
   return (
     <div>
-      <InfoModal
-        open={showInfo}
-        onClose={() => setShowInfo(false)}
-        title="Email Protection — Guida"
-        sections={INFO_SECTIONS}
-      />
+      <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="Email Protection — Guida" sections={INFO_SECTIONS} />
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Email Protection</h1>
-          <p className="text-gray-400 text-sm mt-1">IMAP scan, phishing detection, SPF/DKIM/DMARC analysis</p>
+          <h1 className="text-2xl font-bold text-gray-900">Email Protection</h1>
+          <p className="text-gray-500 text-sm mt-1">Analisi IMAP per phishing, spoofing e anomalie SPF/DKIM/DMARC</p>
         </div>
-        <button
-          onClick={() => setShowInfo(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-corvin-accent border border-corvin-accent/30 rounded-lg hover:bg-corvin-accent/10 transition-colors"
-        >
-          <span>ⓘ</span> Info
+        <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
+          Guida
         </button>
       </div>
 
-      {pageError && <p className="text-red-400 text-sm mb-4">⚠ {pageError}</p>}
+      {pageError && <p className="text-red-600 text-sm mb-4">⚠ {pageError}</p>}
 
-      {/* Bottone aggiungi */}
       <div className="flex justify-end mb-4">
-        <button
-          onClick={() => { setShowForm((v) => !v); setSaveError(''); }}
-          className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg"
-        >
+        <button onClick={() => { setShowForm((v) => !v); setSaveError(''); }} className={showForm ? 'btn-secondary' : 'btn-primary'}>
           {showForm ? '✕ Annulla' : '+ Aggiungi account'}
         </button>
       </div>
 
-      {/* Form aggiunta account */}
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-corvin-800 border border-corvin-700 rounded-xl p-4 mb-4 space-y-3">
-          <div className="bg-corvin-700/40 rounded-lg px-3 py-2 text-xs text-gray-400 space-y-0.5">
-            <p>• <strong className="text-gray-300">Gmail</strong>: host <code>imap.gmail.com</code>, porta 993 — usa un'<strong className="text-gray-300">App Password</strong></p>
-            <p>• <strong className="text-gray-300">Outlook</strong>: host <code>outlook.office365.com</code>, porta 993</p>
-            <p>• <strong className="text-gray-300">Yahoo</strong>: host <code>imap.mail.yahoo.com</code>, porta 993</p>
+        <form onSubmit={handleAdd} className="bg-white rounded-xl shadow-card border border-corvin-200 p-4 mb-4 space-y-3">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs text-blue-700 space-y-0.5">
+            <p>• <strong>Gmail</strong>: host <code>imap.gmail.com</code>, porta 993 — usa un'<strong>App Password</strong></p>
+            <p>• <strong>Outlook</strong>: host <code>outlook.office365.com</code>, porta 993</p>
+            <p>• <strong>Yahoo</strong>: host <code>imap.mail.yahoo.com</code>, porta 993</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Email" type="email" value={form.email_address} onChange={set('email_address')} required />
@@ -348,31 +306,23 @@ export default function EmailProtection() {
             <Field label="IMAP Host" value={form.imap_host} onChange={set('imap_host')} placeholder="imap.gmail.com" required />
             <Field label="Porta" type="number" value={form.imap_port} onChange={set('imap_port')} />
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-300">
-            <input type="checkbox" checked={form.use_ssl} onChange={set('use_ssl')} className="rounded" />
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" checked={form.use_ssl} onChange={set('use_ssl')} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             Usa SSL (raccomandato)
           </label>
-          {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
+          {saveError && <p className="text-red-600 text-sm">{saveError}</p>}
           <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-4 py-2 bg-corvin-accent text-white text-sm font-medium rounded-lg disabled:opacity-50"
-            >
+            <button type="submit" disabled={saving} className="btn-primary">
               {saving ? 'Verifica connessione IMAP…' : 'Salva account'}
             </button>
-            <p className="text-xs text-gray-500">La connessione IMAP viene testata prima del salvataggio.</p>
+            <p className="text-xs text-gray-400">La connessione IMAP viene testata prima del salvataggio.</p>
           </div>
         </form>
       )}
 
-      {/* Lista account */}
       {loading && <LoadingSpinner />}
       {!loading && (accounts ?? []).length === 0 && (
-        <EmptyState
-          title="Nessun account IMAP"
-          description="Aggiungi un account per avviare il monitoraggio email."
-        />
+        <EmptyState title="Nessun account IMAP" description="Aggiungi un account per avviare il monitoraggio email." />
       )}
       {!loading && (accounts ?? []).length > 0 && (
         <div className="space-y-3">
@@ -395,14 +345,14 @@ export default function EmailProtection() {
 function Field({ label, type = 'text', value, onChange, required, placeholder }) {
   return (
     <div>
-      <label className="block text-xs text-gray-400 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
       <input
         type={type}
         value={value}
         onChange={onChange}
         required={required}
         placeholder={placeholder}
-        className="w-full bg-corvin-700 border border-corvin-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-corvin-accent placeholder:text-gray-600"
+        className="form-input"
       />
     </div>
   );

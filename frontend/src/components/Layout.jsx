@@ -18,7 +18,7 @@ export default function Layout() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-corvin-900 text-white">
+    <div className="flex min-h-screen bg-corvin-50">
       <Sidebar unreadCount={unread} />
       <main className="flex-1 overflow-auto">
         <div className="max-w-6xl mx-auto px-6 py-8">

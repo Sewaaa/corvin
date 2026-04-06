@@ -1,25 +1,33 @@
-const SEVERITY_STYLES = {
-  critical: 'bg-red-500/20 text-red-400 border-red-500/30',
-  high:     'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  medium:   'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  low:      'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  info:     'bg-gray-500/20 text-gray-400 border-gray-500/30',
-  safe:     'bg-green-500/20 text-green-400 border-green-500/30',
-  suspicious: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  malicious:  'bg-red-500/20 text-red-400 border-red-500/30',
-  pending:    'bg-gray-500/20 text-gray-400 border-gray-500/30',
-  analyzing:  'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  completed:  'bg-green-500/20 text-green-400 border-green-500/30',
-  running:    'bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse',
-  failed:     'bg-red-500/20 text-red-400 border-red-500/30',
+const SEVERITY_CONFIG = {
+  critical:   { style: 'bg-red-50 text-red-700 border-red-200',       label: 'Critico' },
+  high:       { style: 'bg-orange-50 text-orange-700 border-orange-200', label: 'Alto' },
+  medium:     { style: 'bg-amber-50 text-amber-700 border-amber-200',  label: 'Medio' },
+  low:        { style: 'bg-blue-50 text-blue-700 border-blue-200',     label: 'Basso' },
+  info:       { style: 'bg-gray-100 text-gray-600 border-gray-200',    label: 'Info' },
+  safe:       { style: 'bg-green-50 text-green-700 border-green-200',  label: 'Sicuro' },
+  suspicious: { style: 'bg-amber-50 text-amber-700 border-amber-200',  label: 'Sospetto' },
+  malicious:  { style: 'bg-red-50 text-red-700 border-red-200',        label: 'Malevolo' },
+  pending:    { style: 'bg-gray-100 text-gray-500 border-gray-200',    label: 'In attesa' },
+  analyzing:  { style: 'bg-blue-50 text-blue-700 border-blue-200',     label: 'Analisi' },
+  completed:  { style: 'bg-green-50 text-green-700 border-green-200',  label: 'Completato' },
+  running:    { style: 'bg-blue-50 text-blue-700 border-blue-200 animate-pulse', label: 'In corso' },
+  failed:     { style: 'bg-red-50 text-red-700 border-red-200',        label: 'Fallito' },
+  verified:   { style: 'bg-green-50 text-green-700 border-green-200',  label: 'Verificato' },
+  unverified: { style: 'bg-gray-100 text-gray-500 border-gray-200',    label: 'Da verificare' },
+  active:     { style: 'bg-green-50 text-green-700 border-green-200',  label: 'Attivo' },
+  inactive:   { style: 'bg-gray-100 text-gray-500 border-gray-200',    label: 'Inattivo' },
 };
+
+const FALLBACK = { style: 'bg-gray-100 text-gray-600 border-gray-200', label: null };
 
 export default function SeverityBadge({ value }) {
   const key = (value ?? 'info').toLowerCase();
-  const style = SEVERITY_STYLES[key] ?? SEVERITY_STYLES.info;
+  const config = SEVERITY_CONFIG[key] ?? FALLBACK;
+  const displayLabel = config.label ?? value;
+
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium ${style}`}>
-      {value}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-semibold ${config.style}`}>
+      {displayLabel}
     </span>
   );
 }
