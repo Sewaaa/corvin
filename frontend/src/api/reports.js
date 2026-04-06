@@ -4,8 +4,9 @@ export const reports = {
   summary: () => api.get('/reports/summary'),
 
   downloadPdf: async () => {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
     const token = localStorage.getItem('access_token');
-    const res = await fetch('/api/v1/reports/pdf', {
+    const res = await fetch(`${API_BASE}/reports/pdf`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) throw new Error('Errore generazione PDF');
