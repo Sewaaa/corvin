@@ -11,7 +11,7 @@ from typing import List, Optional
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -69,6 +69,7 @@ def _build_summary(findings: list) -> ScanSummary:
 )
 async def start_scan(
     body: ScanSchedule,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     org: Organization = Depends(get_current_org),
@@ -108,7 +109,8 @@ async def start_scan(
     await db.commit()
     await db.refresh(scan)
 
-    run_web_scan_task.delay(str(scan.id))
+    from app.modules.web_scanner.tasks import _run_scan_async
+    background_tasks.add_task(_run_scan_async, str(scan.id))
     logger.info("web_scan_dispatched", scan_id=str(scan.id), target=target_url)
 
     return scan
