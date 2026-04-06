@@ -33,29 +33,37 @@ def analyze_file_task(self, file_id: str) -> dict:
 
 
 async def _analyze_async(file_id: str) -> dict:
+    import uuid as _uuid
     from sqlalchemy import select
 
     from app.core.database import AsyncSessionLocal
     from app.models.sandbox import SandboxFile, FileStatus
     from app.modules.sandbox.service import analyze_file
 
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            select(SandboxFile).where(SandboxFile.id == file_id)
-        )
-        sandbox_file = result.scalar_one_or_none()
-        if sandbox_file is None:
-            return {"status": "not_found"}
+    try:
+        logger.info("sandbox_bg_start", file_id=file_id)
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(SandboxFile).where(SandboxFile.id == _uuid.UUID(file_id))
+            )
+            sandbox_file = result.scalar_one_or_none()
+            if sandbox_file is None:
+                logger.error("sandbox_bg_not_found", file_id=file_id)
+                return {"status": "not_found"}
 
-        stored_path = sandbox_file.stored_path
-        if not os.path.exists(stored_path):
-            logger.error("sandbox_file_missing", file_id=file_id, path=stored_path)
-            sandbox_file.status = FileStatus.SUSPICIOUS
-            await db.commit()
-            return {"status": "file_missing"}
+            stored_path = sandbox_file.stored_path
+            if not os.path.exists(stored_path):
+                logger.error("sandbox_file_missing", file_id=file_id, path=stored_path)
+                sandbox_file.status = FileStatus.SUSPICIOUS
+                await db.commit()
+                return {"status": "file_missing"}
 
-        with open(stored_path, "rb") as f:
-            file_data = f.read()
+            with open(stored_path, "rb") as f:
+                file_data = f.read()
 
-        await analyze_file(db, sandbox_file, file_data)
-        return {"status": sandbox_file.status.value, "file_id": file_id}
+            await analyze_file(db, sandbox_file, file_data)
+            logger.info("sandbox_bg_done", file_id=file_id, verdict=sandbox_file.status.value)
+            return {"status": sandbox_file.status.value, "file_id": file_id}
+    except Exception as exc:
+        logger.error("sandbox_bg_failed", file_id=file_id, error=str(exc), exc_info=True)
+        return {"status": "error"}

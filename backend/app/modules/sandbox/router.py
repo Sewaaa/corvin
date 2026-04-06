@@ -11,7 +11,7 @@ import uuid
 from typing import List, Optional
 
 import structlog
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,6 +62,7 @@ async def _get_file_or_404(file_id: uuid.UUID, org_id: uuid.UUID, db: AsyncSessi
     summary="Carica un file per l'analisi statica",
 )
 async def upload_file(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -144,8 +145,8 @@ async def upload_file(
     await db.commit()
     await db.refresh(sandbox_file)
 
-    from app.modules.sandbox.tasks import analyze_file_task
-    analyze_file_task.delay(str(sandbox_file.id))
+    from app.modules.sandbox.tasks import _analyze_async
+    background_tasks.add_task(_analyze_async, str(sandbox_file.id))
 
     logger.info(
         "sandbox_file_uploaded",

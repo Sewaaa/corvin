@@ -57,10 +57,26 @@ export default function FileSandbox() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      await sandboxApi.upload(fd);
+      const uploaded = await sandboxApi.upload(fd);
       refetch();
+      // Poll ogni 3s per max 45s in attesa che l'analisi background completi
+      if (uploaded?.id) {
+        for (let i = 0; i < 15; i++) {
+          await new Promise((r) => setTimeout(r, 3000));
+          const updated = await refetch();
+          const found = (updated ?? []).find((f) => f.id === uploaded.id);
+          if (found && found.status !== 'pending' && found.status !== 'analyzing') break;
+        }
+      }
     } catch (err) {
-      setUploadError(err.message);
+      const msg = err.message ?? '';
+      if (msg.includes('troppo grande') || msg.includes('413')) {
+        setUploadError('File troppo grande. Dimensione massima: 10 MB.');
+      } else if (msg.includes('non supportato') || msg.includes('415')) {
+        setUploadError('Tipo di file non supportato. Controlla i formati accettati.');
+      } else {
+        setUploadError(err.message ?? 'Errore durante l\'upload. Riprova più tardi.');
+      }
     } finally {
       setUploading(false);
     }
