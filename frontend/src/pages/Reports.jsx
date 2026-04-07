@@ -129,16 +129,16 @@ export default function Reports() {
               <Row label={t('report.row.monitoredEmails')} value={summary.breach_monitor.monitored_emails} />
               <Row label={t('report.row.breachedEmails')} value={summary.breach_monitor.breached_emails} highlight={summary.breach_monitor.breached_emails > 0} />
               <Row label={t('report.row.breachRate')} value={`${summary.breach_monitor.breach_rate_pct}%`} highlight={summary.breach_monitor.breach_rate_pct > 0} />
-              <Row label={t('report.row.totalBreachRecords')} value={summary.breach_monitor.total_breach_records} />
+              <Row label={t('report.row.breachTotal')} value={summary.breach_monitor.total_breach_records} />
             </SectionCard>
 
             <SectionCard title={t('report.section.domain')}>
-              <Row label={t('report.row.monitoredDomains')} value={summary.domain_reputation.total_domains} />
+              <Row label={t('report.row.totalDomains')} value={summary.domain_reputation.total_domains} />
               <Row label={t('report.row.verifiedDomains')} value={summary.domain_reputation.verified_domains} />
-              <Row label={t('report.row.averageScore')} value={summary.domain_reputation.average_score ?? '—'} />
+              <Row label={t('report.row.avgScore')} value={summary.domain_reputation.average_score ?? '—'} />
             </SectionCard>
 
-            <SectionCard title={t('report.section.scanner')}>
+            <SectionCard title={t('report.section.scan')}>
               <Row label={t('report.row.totalScans')} value={summary.web_scanner.total_scans} />
               <Row label={t('report.row.completedScans')} value={summary.web_scanner.completed_scans} />
               <Row label={t('report.row.totalFindings')} value={summary.web_scanner.total_findings} />
@@ -149,20 +149,20 @@ export default function Reports() {
             </SectionCard>
 
             <SectionCard title={t('report.section.email')}>
-              <Row label={t('report.row.monitoredAccounts')} value={summary.email_protection.monitored_accounts} />
+              <Row label={t('report.row.accounts')} value={summary.email_protection.monitored_accounts} />
               <Row label={t('report.row.totalThreats')} value={summary.email_protection.total_threats} />
-              <Row label={t('report.row.criticalThreats')} value={summary.email_protection.critical_threats} highlight={summary.email_protection.critical_threats > 0} />
+              <Row label={t('report.row.critical')} value={summary.email_protection.critical_threats} highlight={summary.email_protection.critical_threats > 0} />
               <Row label={t('report.row.quarantined')} value={summary.email_protection.quarantined} />
             </SectionCard>
 
             <SectionCard title={t('report.section.sandbox')}>
-              <Row label={t('report.row.analyzedFiles')} value={summary.file_sandbox.total_files} />
+              <Row label={t('report.row.filesAnalyzed')} value={summary.file_sandbox.total_files} />
               {Object.entries(summary.file_sandbox.by_status ?? {}).map(([st, count]) => (
                 <Row key={st} label={st.charAt(0).toUpperCase() + st.slice(1)} value={count} highlight={st === 'malicious' && count > 0} />
               ))}
             </SectionCard>
 
-            <SectionCard title={t('report.section.notifications')}>
+            <SectionCard title={t('report.section.notif')}>
               <Row label={t('report.row.total')} value={summary.notifications.total} />
               <Row label={t('report.row.unread')} value={summary.notifications.unread} highlight={summary.notifications.unread > 0} />
               <div className="mt-2 pt-2 border-t border-corvin-100">

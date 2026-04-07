@@ -194,12 +194,12 @@ function AuditTab() {
           <option value="user.login">{t('settings.auditLogin')}</option>
           <option value="user.register">{t('settings.auditRegister')}</option>
           <option value="user.invite">{t('settings.auditInvite')}</option>
-          <option value="user.role_change">{t('settings.auditRoleChange')}</option>
-          <option value="breach.check">{t('settings.auditBreachCheck')}</option>
+          <option value="user.role_change">{t('settings.auditRole')}</option>
+          <option value="breach.check">{t('settings.auditBreach')}</option>
           <option value="domain.add">{t('settings.auditDomainAdd')}</option>
-          <option value="domain.verified">{t('settings.auditDomainVerified')}</option>
-          <option value="scan.create">{t('settings.auditScanCreate')}</option>
-          <option value="sandbox.upload">{t('settings.auditFileUpload')}</option>
+          <option value="domain.verified">{t('settings.auditDomainVerify')}</option>
+          <option value="scan.create">{t('settings.auditScan')}</option>
+          <option value="sandbox.upload">{t('settings.auditUpload')}</option>
         </select>
         <span className="text-sm text-gray-500">{t('settings.eventsFound', { count: total })}</span>
       </div>

@@ -62,13 +62,13 @@ function BreachBadge({ count }) {
   );
 }
 
-const ACTION_PLAN = [
-  { icon: '1', text: 'Cambia immediatamente la password dell\'account compromesso.', urgent: true },
-  { icon: '2', text: 'Abilita l\'autenticazione a due fattori (2FA/MFA) dove disponibile.', urgent: true },
-  { icon: '3', text: 'Controlla se hai usato la stessa password su altri servizi e cambiale tutte.', urgent: true },
-  { icon: '4', text: 'Verifica gli accessi recenti sull\'account e revoca sessioni sospette.', urgent: false },
-  { icon: '5', text: 'Monitora l\'account per attività insolite nelle prossime settimane.', urgent: false },
-  { icon: '6', text: 'Considera l\'uso di un password manager per generare password uniche.', urgent: false },
+const ACTION_KEYS = [
+  { icon: '1', key: 'breach.action1', urgent: true },
+  { icon: '2', key: 'breach.action2', urgent: true },
+  { icon: '3', key: 'breach.action3', urgent: true },
+  { icon: '4', key: 'breach.action4', urgent: false },
+  { icon: '5', key: 'breach.action5', urgent: false },
+  { icon: '6', key: 'breach.action6', urgent: false },
 ];
 
 const DATA_CLASS_COLORS = {
@@ -261,7 +261,7 @@ export default function BreachMonitor() {
                             {t('breach.actionPlan')}
                           </p>
                           <div className="space-y-2">
-                            {ACTION_PLAN.map((step, i) => (
+                            {ACTION_KEYS.map((step, i) => (
                               <div key={i} className="flex items-start gap-2.5">
                                 <span className={`text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                                   step.urgent ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'
@@ -269,7 +269,7 @@ export default function BreachMonitor() {
                                   {step.icon}
                                 </span>
                                 <span className={`text-sm ${step.urgent ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
-                                  {step.text}
+                                  {t(step.key)}
                                 </span>
                               </div>
                             ))}
