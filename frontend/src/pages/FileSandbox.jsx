@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useApi } from '../hooks/useApi';
 import { sandbox as sandboxApi } from '../api/sandbox';
+import { useSettings } from '../context/SettingsContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -40,7 +41,7 @@ const INFO_SECTIONS = [
   },
 ];
 
-function DropZone({ onFile }) {
+function DropZone({ onFile, t }) {
   const [drag, setDrag] = useState(false);
   const input = useRef();
 
@@ -63,17 +64,15 @@ function DropZone({ onFile }) {
         <svg className={`w-8 h-8 ${drag ? 'text-blue-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
         </svg>
-        <p className="text-sm text-gray-600">
-          Trascina un file qui, oppure <span className="text-blue-600 font-medium">clicca per selezionare</span>
-        </p>
-        <p className="text-xs text-gray-400">Max 10 MB · YARA + VirusTotal hash lookup</p>
+        <p className="text-sm text-gray-600" dangerouslySetInnerHTML={{ __html: t('sandbox.dropHint') }} />
+        <p className="text-xs text-gray-400">{t('sandbox.dropSub')}</p>
       </div>
     </div>
   );
 }
 
-function YaraMatches({ matches }) {
-  if (!matches?.length) return <p className="text-xs text-gray-500">Nessun match YARA.</p>;
+function YaraMatches({ matches, t }) {
+  if (!matches?.length) return <p className="text-xs text-gray-500">{t('sandbox.yaraEmpty')}</p>;
   return (
     <div className="space-y-1">
       {matches.map((m, i) => (
@@ -88,6 +87,7 @@ function YaraMatches({ matches }) {
 }
 
 export default function FileSandbox() {
+  const { t } = useSettings();
   const { data: files, loading, error, refetch } = useApi(() => sandboxApi.list());
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -114,11 +114,11 @@ export default function FileSandbox() {
     } catch (err) {
       const msg = err.message ?? '';
       if (msg.includes('troppo grande') || msg.includes('413')) {
-        setUploadError('File troppo grande. Dimensione massima: 10 MB.');
+        setUploadError(t('sandbox.tooLarge'));
       } else if (msg.includes('non supportato') || msg.includes('415')) {
-        setUploadError('Tipo di file non supportato. Controlla i formati accettati.');
+        setUploadError(t('sandbox.unsupported'));
       } else {
-        setUploadError(err.message ?? 'Errore durante l\'upload. Riprova più tardi.');
+        setUploadError(err.message ?? t('sandbox.uploadError'));
       }
     } finally {
       setUploading(false);
@@ -132,14 +132,14 @@ export default function FileSandbox() {
 
   const handleRemove = async (e, id) => {
     e.stopPropagation();
-    if (!window.confirm('Rimuovere questo file dall\'elenco?')) return;
+    if (!window.confirm(t('sandbox.removeConfirm'))) return;
     setRemovingId(id);
     try {
       await sandboxApi.remove(id);
       if (detail?.id === id) setDetail(null);
       await refetch();
     } catch (err) {
-      setUploadError(err.message ?? 'Errore durante la rimozione.');
+      setUploadError(err.message ?? t('sandbox.removeError'));
     } finally {
       setRemovingId(null);
     }
@@ -154,20 +154,20 @@ export default function FileSandbox() {
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">File Sandbox</h1>
-          <p className="text-gray-500 text-sm mt-1">Analisi statica: YARA, VirusTotal hash, entropia, PE parsing</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('sandbox.title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('sandbox.subtitle')}</p>
         </div>
         <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
-          Guida
+          {t('common.guide')}
         </button>
       </div>
 
-      <DropZone onFile={handleFile} />
+      <DropZone onFile={handleFile} t={t} />
       {uploading && (
         <div className="flex items-center gap-2 text-sm text-blue-600 mb-4 animate-pulse">
           <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-          Upload e analisi in corso…
+          {t('sandbox.uploading')}
         </div>
       )}
       {uploadError && <p className="text-red-600 text-sm mb-4">{uploadError}</p>}
@@ -176,7 +176,7 @@ export default function FileSandbox() {
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {!loading && files?.length === 0 && (
-        <EmptyState title="Nessun file analizzato" description="Carica un file per avviare l'analisi." />
+        <EmptyState title={t('sandbox.emptyTitle')} description={t('sandbox.emptyDesc')} />
       )}
 
       {!loading && files?.length > 0 && (
@@ -208,28 +208,28 @@ export default function FileSandbox() {
                 <div className="border-t border-corvin-100 px-4 py-3 space-y-3">
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-500 font-medium">SHA-256: </span>
+                      <span className="text-gray-500 font-medium">{t('sandbox.sha256')} </span>
                       <code className="text-gray-700 break-all">{detail.sha256_hash}</code>
                     </div>
                     <div>
-                      <span className="text-gray-500 font-medium">MIME: </span>
+                      <span className="text-gray-500 font-medium">{t('sandbox.mime')} </span>
                       <span className="text-gray-900">{detail.mime_type ?? '—'}</span>
                     </div>
                     {detail.metadata_extracted?.entropy != null && (
                       <div>
-                        <span className="text-gray-500 font-medium">Entropia: </span>
+                        <span className="text-gray-500 font-medium">{t('sandbox.entropy')} </span>
                         <span className={detail.metadata_extracted.high_entropy ? 'text-red-600 font-semibold' : 'text-gray-900'}>
                           {detail.metadata_extracted.entropy}
-                          {detail.metadata_extracted.high_entropy && ' ⚠ alta'}
+                          {detail.metadata_extracted.high_entropy && ` ${t('sandbox.entropyHigh')}`}
                         </span>
                       </div>
                     )}
                     {detail.virustotal_result && (
                       <div>
-                        <span className="text-gray-500 font-medium">VirusTotal: </span>
+                        <span className="text-gray-500 font-medium">{t('sandbox.vt')} </span>
                         <span className={detail.virustotal_result.detections > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
                           {detail.virustotal_result.status === 'not_found'
-                            ? 'non trovato'
+                            ? t('sandbox.vtNotFound')
                             : `${detail.virustotal_result.detections}/${detail.virustotal_result.total}`}
                         </span>
                       </div>
@@ -237,13 +237,13 @@ export default function FileSandbox() {
                   </div>
 
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">YARA matches</p>
-                    <YaraMatches matches={detail.yara_matches} />
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">{t('sandbox.yaraTitle')}</p>
+                    <YaraMatches matches={detail.yara_matches} t={t} />
                   </div>
 
                   {detail.metadata_extracted?.suspicious_strings?.length > 0 && (
                     <div>
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Stringhe sospette</p>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">{t('sandbox.suspStrings')}</p>
                       <div className="bg-gray-900 rounded-lg p-2.5 max-h-24 overflow-y-auto">
                         {detail.metadata_extracted.suspicious_strings.map((s, i) => (
                           <code key={i} className="block text-xs text-amber-400 font-mono">{s}</code>

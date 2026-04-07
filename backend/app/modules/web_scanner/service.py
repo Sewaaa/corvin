@@ -47,9 +47,9 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "header": "Strict-Transport-Security",
         "category": "security_headers",
         "severity": "high",
-        "title": "Missing HSTS header",
-        "description": "HTTP Strict Transport Security is not set. Browsers may connect over HTTP.",
-        "recommendation": "Add: Strict-Transport-Security: max-age=31536000; includeSubDomains",
+        "title": "Header HSTS mancante",
+        "description": "HTTP Strict Transport Security non impostato. I browser potrebbero connettersi via HTTP.",
+        "recommendation": "Aggiungi: Strict-Transport-Security: max-age=31536000; includeSubDomains",
         "check": lambda v: v is None,
     },
     {
@@ -57,9 +57,9 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "header": "Content-Security-Policy",
         "category": "security_headers",
         "severity": "high",
-        "title": "Missing Content-Security-Policy header",
-        "description": "No CSP header found. XSS and data injection attacks are not mitigated.",
-        "recommendation": "Define a strict CSP policy. Start with: Content-Security-Policy: default-src 'self'",
+        "title": "Header Content-Security-Policy mancante",
+        "description": "Nessun header CSP trovato. Gli attacchi XSS e data injection non sono mitigati.",
+        "recommendation": "Definisci una policy CSP restrittiva. Inizia con: Content-Security-Policy: default-src 'self'",
         "check": lambda v: v is None,
     },
     {
@@ -67,9 +67,9 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "header": "X-Frame-Options",
         "category": "security_headers",
         "severity": "medium",
-        "title": "Missing X-Frame-Options header",
-        "description": "The page can be embedded in iframes, enabling clickjacking attacks.",
-        "recommendation": "Add: X-Frame-Options: DENY  (or SAMEORIGIN if embedding is needed)",
+        "title": "Header X-Frame-Options mancante",
+        "description": "La pagina puo essere incorporata in iframe, abilitando attacchi di clickjacking.",
+        "recommendation": "Aggiungi: X-Frame-Options: DENY  (o SAMEORIGIN se l'embedding e necessario)",
         "check": lambda v: v is None,
     },
     {
@@ -77,9 +77,9 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "header": "X-Content-Type-Options",
         "category": "security_headers",
         "severity": "medium",
-        "title": "Missing X-Content-Type-Options header",
-        "description": "Browser MIME sniffing is enabled, potentially allowing content-type confusion attacks.",
-        "recommendation": "Add: X-Content-Type-Options: nosniff",
+        "title": "Header X-Content-Type-Options mancante",
+        "description": "Il MIME sniffing del browser e abilitato, consentendo potenzialmente attacchi di content-type confusion.",
+        "recommendation": "Aggiungi: X-Content-Type-Options: nosniff",
         "check": lambda v: v is None,
     },
     {
@@ -87,9 +87,9 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "header": "Referrer-Policy",
         "category": "security_headers",
         "severity": "low",
-        "title": "Missing Referrer-Policy header",
-        "description": "Referrer information may be leaked to third-party sites.",
-        "recommendation": "Add: Referrer-Policy: strict-origin-when-cross-origin",
+        "title": "Header Referrer-Policy mancante",
+        "description": "Le informazioni sul referrer potrebbero essere esposte a siti di terze parti.",
+        "recommendation": "Aggiungi: Referrer-Policy: strict-origin-when-cross-origin",
         "check": lambda v: v is None,
     },
     {
@@ -97,9 +97,9 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "header": "Permissions-Policy",
         "category": "security_headers",
         "severity": "low",
-        "title": "Missing Permissions-Policy header",
-        "description": "Browser features (camera, microphone, geolocation) are not explicitly restricted.",
-        "recommendation": "Add: Permissions-Policy: geolocation=(), microphone=(), camera=()",
+        "title": "Header Permissions-Policy mancante",
+        "description": "Le funzionalita del browser (fotocamera, microfono, geolocalizzazione) non sono esplicitamente limitate.",
+        "recommendation": "Aggiungi: Permissions-Policy: geolocation=(), microphone=(), camera=()",
         "check": lambda v: v is None,
     },
     {
@@ -107,9 +107,9 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "header": "Server",
         "category": "security_headers",
         "severity": "info",
-        "title": "Server header discloses software version",
-        "description": "The Server header reveals software and version information to attackers.",
-        "recommendation": "Configure the web server to suppress or genericize the Server header.",
+        "title": "Header Server espone la versione del software",
+        "description": "L'header Server rivela informazioni sul software e la versione agli attaccanti.",
+        "recommendation": "Configura il web server per sopprimere o rendere generico l'header Server.",
         "check": lambda v: v is not None and any(
             sw in v for sw in ["Apache/", "nginx/", "Microsoft-IIS/", "PHP/"]
         ),
@@ -119,9 +119,9 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
         "header": "X-Powered-By",
         "category": "security_headers",
         "severity": "info",
-        "title": "X-Powered-By header discloses technology stack",
-        "description": "Technology stack information is exposed, aiding attacker reconnaissance.",
-        "recommendation": "Remove or suppress the X-Powered-By header.",
+        "title": "Header X-Powered-By espone lo stack tecnologico",
+        "description": "Le informazioni sullo stack tecnologico sono esposte, facilitando la ricognizione degli attaccanti.",
+        "recommendation": "Rimuovi o sopprimi l'header X-Powered-By.",
         "check": lambda v: v is not None,
     },
 ]
@@ -132,30 +132,30 @@ SECURITY_HEADERS: List[Dict[str, Any]] = [
 # ---------------------------------------------------------------------------
 
 EXPOSED_PATHS: List[Dict[str, Any]] = [
-    {"path": "/.env", "severity": "critical", "title": "Exposed .env file",
-     "description": "A .env file is publicly accessible. It may contain database credentials, API keys, and secrets.",
-     "recommendation": "Move .env outside the web root or deny access via web server configuration."},
-    {"path": "/.git/HEAD", "severity": "critical", "title": "Exposed .git directory",
-     "description": "The .git directory is accessible. Attackers can reconstruct the full source code.",
-     "recommendation": "Block access to .git via web server rules (deny all /.git/)."},
-    {"path": "/wp-config.php.bak", "severity": "critical", "title": "Exposed WordPress config backup",
-     "description": "A backup of wp-config.php is publicly accessible, potentially exposing DB credentials.",
-     "recommendation": "Delete backup files from the web root."},
-    {"path": "/config.php.bak", "severity": "critical", "title": "Exposed config backup file",
-     "description": "A backup configuration file is publicly accessible.",
-     "recommendation": "Delete or move backup files outside the web root."},
-    {"path": "/.htpasswd", "severity": "high", "title": "Exposed .htpasswd file",
-     "description": "Apache password file is accessible. Contains hashed credentials.",
-     "recommendation": "Move .htpasswd above the web root or deny HTTP access."},
-    {"path": "/phpinfo.php", "severity": "high", "title": "phpinfo() page exposed",
-     "description": "PHP configuration details are publicly accessible, aiding attacker reconnaissance.",
-     "recommendation": "Remove phpinfo.php from production environments."},
-    {"path": "/server-status", "severity": "medium", "title": "Apache server-status exposed",
-     "description": "Apache mod_status is publicly accessible, revealing server internals.",
-     "recommendation": "Restrict /server-status to localhost or internal IPs only."},
-    {"path": "/robots.txt", "severity": "info", "title": "robots.txt found",
-     "description": "robots.txt may reveal sensitive paths (admin panels, internal APIs).",
-     "recommendation": "Review robots.txt for inadvertent disclosure of sensitive paths."},
+    {"path": "/.env", "severity": "critical", "title": "File .env esposto",
+     "description": "Un file .env e accessibile pubblicamente. Potrebbe contenere credenziali database, chiavi API e segreti.",
+     "recommendation": "Sposta il file .env fuori dalla web root o negane l'accesso tramite configurazione del web server."},
+    {"path": "/.git/HEAD", "severity": "critical", "title": "Directory .git esposta",
+     "description": "La directory .git e accessibile. Gli attaccanti possono ricostruire l'intero codice sorgente.",
+     "recommendation": "Blocca l'accesso a .git tramite regole del web server (deny all /.git/)."},
+    {"path": "/wp-config.php.bak", "severity": "critical", "title": "Backup configurazione WordPress esposto",
+     "description": "Un backup di wp-config.php e accessibile pubblicamente, esponendo potenzialmente le credenziali del DB.",
+     "recommendation": "Elimina i file di backup dalla web root."},
+    {"path": "/config.php.bak", "severity": "critical", "title": "File di backup configurazione esposto",
+     "description": "Un file di backup della configurazione e accessibile pubblicamente.",
+     "recommendation": "Elimina o sposta i file di backup fuori dalla web root."},
+    {"path": "/.htpasswd", "severity": "high", "title": "File .htpasswd esposto",
+     "description": "Il file password di Apache e accessibile. Contiene credenziali hashate.",
+     "recommendation": "Sposta .htpasswd sopra la web root o negane l'accesso HTTP."},
+    {"path": "/phpinfo.php", "severity": "high", "title": "Pagina phpinfo() esposta",
+     "description": "I dettagli di configurazione PHP sono accessibili pubblicamente, facilitando la ricognizione degli attaccanti.",
+     "recommendation": "Rimuovi phpinfo.php dagli ambienti di produzione."},
+    {"path": "/server-status", "severity": "medium", "title": "Apache server-status esposto",
+     "description": "Apache mod_status e accessibile pubblicamente, rivelando dettagli interni del server.",
+     "recommendation": "Limita /server-status solo a localhost o IP interni."},
+    {"path": "/robots.txt", "severity": "info", "title": "robots.txt trovato",
+     "description": "robots.txt potrebbe rivelare percorsi sensibili (pannelli admin, API interne).",
+     "recommendation": "Controlla robots.txt per eventuali esposizioni involontarie di percorsi sensibili."},
 ]
 
 
@@ -320,9 +320,9 @@ def detect_cms(response: httpx.Response) -> Tuple[Optional[str], Optional[str], 
         findings.append({
             "category": "cms",
             "severity": "info",
-            "title": f"CMS detected: {cms['name']}{f' {version}' if version else ''}",
-            "description": f"{cms['name']} CMS detected. Keeping it updated is critical for security.",
-            "recommendation": f"Ensure {cms['name']} core, themes, and plugins are always up to date.",
+            "title": f"CMS rilevato: {cms['name']}{f' {version}' if version else ''}",
+            "description": f"CMS {cms['name']} rilevato. Mantenerlo aggiornato e fondamentale per la sicurezza.",
+            "recommendation": f"Assicurati che core, temi e plugin di {cms['name']} siano sempre aggiornati.",
             "evidence": {"cms": cms["name"], "version": version},
         })
 
@@ -334,12 +334,12 @@ def detect_cms(response: httpx.Response) -> Tuple[Optional[str], Optional[str], 
                 findings.append({
                     "category": "cve",
                     "severity": "critical",
-                    "title": f"Known vulnerability: {cve} in {cms['name']} {version}",
+                    "title": f"Vulnerabilita nota: {cve} in {cms['name']} {version}",
                     "description": (
-                        f"{cms['name']} version {version} is affected by {cve}. "
-                        "This version has a publicly known critical vulnerability."
+                        f"{cms['name']} versione {version} e affetto da {cve}. "
+                        "Questa versione presenta una vulnerabilita critica pubblicamente nota."
                     ),
-                    "recommendation": f"Upgrade {cms['name']} immediately to the latest stable version.",
+                    "recommendation": f"Aggiorna immediatamente {cms['name']} all'ultima versione stabile.",
                     "cve_id": cve,
                     "cvss_score": 9.8,
                     "evidence": {"cms": cms["name"], "version": version, "cve": cve},
@@ -472,11 +472,11 @@ async def _create_scan_notification(
     )
     notification = Notification(
         organization_id=scan.organization_id,
-        title=f"Web scan completed: {severity_counts['critical']} critical, {severity_counts['high']} high findings",
+        title=f"Scansione web completata: {severity_counts['critical']} critici, {severity_counts['high']} alti",
         message=(
-            f"Scan of {scan.target_url} found {scan.findings_count} issue(s): "
-            f"{severity_counts['critical']} critical, {severity_counts['high']} high, "
-            f"{severity_counts['medium']} medium. Review and remediate immediately."
+            f"La scansione di {scan.target_url} ha trovato {scan.findings_count} problema/i: "
+            f"{severity_counts['critical']} critici, {severity_counts['high']} alti, "
+            f"{severity_counts['medium']} medi. Verifica e correggi immediatamente."
         ),
         severity=severity,
         source_module="web_scanner",

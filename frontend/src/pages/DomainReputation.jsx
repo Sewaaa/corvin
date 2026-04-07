@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { domain as domainApi } from '../api/domain';
+import { useSettings } from '../context/SettingsContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -53,6 +54,7 @@ function ScoreBar({ score }) {
 }
 
 export default function DomainReputation() {
+  const { t } = useSettings();
   const { data: domains, loading, error, refetch } = useApi(() => domainApi.list());
   const [newDomain, setNewDomain] = useState('');
   const [adding, setAdding] = useState(false);
@@ -83,14 +85,14 @@ export default function DomainReputation() {
     try { await fn(id); refetch(); } catch (err) {
       const msg = err.message ?? '';
       const mapped = Object.entries(errorMap).find(([key]) => msg.toLowerCase().includes(key.toLowerCase()));
-      setActionError(mapped ? mapped[1] : 'Si è verificato un errore. Riprova più tardi.');
+      setActionError(mapped ? mapped[1] : t('domain.genericError'));
     }
     finally { setBusyId(null); }
   };
 
   const handleVerify = action(domainApi.verify, {
-    'Verification failed': 'Verifica fallita. Assicurati di aver aggiunto il record TXT al DNS del dominio. La propagazione DNS può richiedere fino a 48 ore.',
-    'not found': 'Dominio non trovato.',
+    'Verification failed': t('domain.verifyFail'),
+    'not found': t('domain.notFound'),
   });
   const handleScan = async (id) => {
     setBusyId(id);
@@ -109,9 +111,9 @@ export default function DomainReputation() {
     } catch (err) {
       const msg = err.message ?? '';
       if (msg.toLowerCase().includes('must be verified')) {
-        setActionError('Devi prima verificare il dominio prima di poterlo scansionare.');
+        setActionError(t('domain.mustVerify'));
       } else {
-        setActionError('Si è verificato un errore. Riprova più tardi.');
+        setActionError(t('domain.genericError'));
       }
     } finally {
       setBusyId(null);
@@ -119,7 +121,7 @@ export default function DomainReputation() {
     }
   };
   const handleDelete = async (id) => {
-    if (!confirm('Rimuovere questo dominio?')) return;
+    if (!confirm(t('domain.removeConfirm'))) return;
     action(domainApi.remove)(id);
   };
 
@@ -129,12 +131,12 @@ export default function DomainReputation() {
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Domain Reputation</h1>
-          <p className="text-gray-500 text-sm mt-1">Analisi DNS, blacklist, certificato SSL e WHOIS</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('domain.title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('domain.subtitle')}</p>
         </div>
         <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
-          Guida
+          {t('common.guide')}
         </button>
       </div>
 
@@ -148,7 +150,7 @@ export default function DomainReputation() {
           className="form-input flex-1"
         />
         <button type="submit" disabled={adding} className="btn-primary whitespace-nowrap">
-          {adding ? 'Aggiunta…' : '+ Aggiungi'}
+          {adding ? t('domain.adding') : t('domain.addBtn')}
         </button>
       </form>
       {addError && <p className="text-sm text-red-600 mb-4">{addError}</p>}
@@ -158,7 +160,7 @@ export default function DomainReputation() {
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {!loading && domains?.length === 0 && (
-        <EmptyState title="Nessun dominio monitorato" description="Aggiungi un dominio e verificalo con il record DNS TXT." />
+        <EmptyState title={t('domain.emptyTitle')} description={t('domain.emptyDesc')} />
       )}
 
       {!loading && domains?.length > 0 && (
@@ -185,7 +187,7 @@ export default function DomainReputation() {
                   )}
                   {d.last_scan_at && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Ultima scansione: {new Date(d.last_scan_at).toLocaleString('it-IT')}
+                      {t('domain.lastScan')} {new Date(d.last_scan_at).toLocaleString('it-IT')}
                     </p>
                   )}
                 </div>
@@ -196,7 +198,7 @@ export default function DomainReputation() {
                       disabled={busyId === d.id}
                       className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
                     >
-                      Verifica
+                      {t('domain.verify')}
                     </button>
                   )}
                   {d.is_verified && (
@@ -205,11 +207,11 @@ export default function DomainReputation() {
                       disabled={busyId === d.id}
                       className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
                     >
-                      {scanningId === d.id ? 'Scansione in corso…' : 'Scansiona'}
+                      {scanningId === d.id ? t('domain.scanning') : t('domain.scan')}
                     </button>
                   )}
                   <button onClick={() => handleDelete(d.id)} className="text-xs font-medium text-red-500 hover:text-red-700">
-                    Rimuovi
+                    {t('common.remove')}
                   </button>
                 </div>
               </div>

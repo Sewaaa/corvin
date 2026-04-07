@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { webScan } from '../api/webScan';
 import { domain as domainApi } from '../api/domain';
+import { useSettings } from '../context/SettingsContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -40,6 +41,7 @@ const INFO_SECTIONS = [
 ];
 
 export default function WebScanner() {
+  const { t } = useSettings();
   const { data: scans, loading, error, refetch } = useApi(() => webScan.list());
   const { data: domains } = useApi(() => domainApi.list());
   const [selectedDomain, setSelectedDomain] = useState('');
@@ -96,7 +98,7 @@ export default function WebScanner() {
 
   const handleRemove = async (e, scanId) => {
     e.stopPropagation();
-    if (!window.confirm('Rimuovere questa scansione?')) return;
+    if (!window.confirm(t('scan.removeConfirm'))) return;
     setRemovingId(scanId);
     try {
       await webScan.remove(scanId);
@@ -128,30 +130,30 @@ export default function WebScanner() {
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Web Scanner</h1>
-          <p className="text-gray-500 text-sm mt-1">Scansione passiva — max 20 richieste, nessun payload intrusivo</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('scan.title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('scan.subtitle')}</p>
         </div>
         <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
-          Guida
+          {t('common.guide')}
         </button>
       </div>
 
       <form onSubmit={handleStart} className="flex flex-wrap gap-3 mb-6">
         <select value={selectedDomain} onChange={(e) => setSelectedDomain(e.target.value)} className="form-select flex-1 min-w-[200px]">
-          <option value="">Seleziona un dominio verificato…</option>
+          <option value="">{t('scan.selectDomain')}</option>
           {verifiedDomains.map((d) => (
             <option key={d.id} value={d.id}>{d.domain}</option>
           ))}
         </select>
         <select value={frequency} onChange={(e) => setFrequency(e.target.value)} className="form-select">
-          <option value="manual">Una tantum</option>
-          <option value="daily">Giornaliera</option>
-          <option value="weekly">Settimanale</option>
-          <option value="monthly">Mensile</option>
+          <option value="manual">{t('scan.freqManual')}</option>
+          <option value="daily">{t('scan.freqDaily')}</option>
+          <option value="weekly">{t('scan.freqWeekly')}</option>
+          <option value="monthly">{t('scan.freqMonthly')}</option>
         </select>
         <button type="submit" disabled={starting || !selectedDomain} className="btn-primary">
-          {starting ? 'Avvio in corso…' : '▶ Avvia scan'}
+          {starting ? t('scan.starting') : t('scan.startBtn')}
         </button>
       </form>
 
@@ -161,7 +163,7 @@ export default function WebScanner() {
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {!loading && scans?.length === 0 && (
-        <EmptyState title="Nessuna scansione" description="Aggiungi e verifica un dominio, poi avvia la prima scansione." />
+        <EmptyState title={t('scan.emptyTitle')} description={t('scan.emptyDesc')} />
       )}
 
       {!loading && scans?.length > 0 && (
@@ -177,15 +179,15 @@ export default function WebScanner() {
                   <span className="text-sm text-gray-900 font-medium truncate">{s.target_url}</span>
                   {s.frequency && s.frequency !== 'manual' && (
                     <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded shrink-0 font-medium">
-                      {s.frequency === 'daily' ? 'giornaliera' : s.frequency === 'weekly' ? 'settimanale' : 'mensile'}
+                      {s.frequency === 'daily' ? t('scan.freqBadge.daily') : s.frequency === 'weekly' ? t('scan.freqBadge.weekly') : t('scan.freqBadge.monthly')}
                     </span>
                   )}
-                  {s.status === 'failed' && <span className="text-xs text-gray-400 shrink-0">sito non raggiungibile</span>}
+                  {s.status === 'failed' && <span className="text-xs text-gray-400 shrink-0">{t('scan.unreachable')}</span>}
                   {s.status === 'completed' && (
                     <span className="text-xs text-gray-500 shrink-0">
-                      {s.findings_count > 0 ? `${s.findings_count} finding` : 'nessun finding'}
-                      {s.critical_count > 0 && <span className="text-red-600 ml-1">· {s.critical_count} critici</span>}
-                      {s.high_count > 0 && s.critical_count === 0 && <span className="text-orange-600 ml-1">· {s.high_count} alti</span>}
+                      {s.findings_count > 0 ? t('scan.findings', { count: s.findings_count }) : t('scan.noFindings')}
+                      {s.critical_count > 0 && <span className="text-red-600 ml-1">· {t('scan.critical', { count: s.critical_count })}</span>}
+                      {s.high_count > 0 && s.critical_count === 0 && <span className="text-orange-600 ml-1">· {t('scan.high', { count: s.high_count })}</span>}
                     </span>
                   )}
                 </div>
@@ -193,10 +195,10 @@ export default function WebScanner() {
                   <span className="text-xs text-gray-400">{new Date(s.created_at).toLocaleString('it-IT')}</span>
                   {(s.status === 'pending' || s.status === 'failed') && (
                     <button onClick={(e) => { e.stopPropagation(); handleRetry(s); }} disabled={retryingId === s.id} className="text-xs text-blue-600 hover:underline disabled:opacity-50 font-medium">
-                      {retryingId === s.id ? 'Avvio…' : '↺ Riprova'}
+                      {retryingId === s.id ? t('scan.starting') : t('scan.retry')}
                     </button>
                   )}
-                  {s.status === 'completed' && <span className="text-xs text-gray-400">{isOpen(s.id) ? '▲' : '▼ dettagli'}</span>}
+                  {s.status === 'completed' && <span className="text-xs text-gray-400">{isOpen(s.id) ? t('scan.detailsOpen') : t('scan.detailsClose')}</span>}
                   <button onClick={(e) => handleRemove(e, s.id)} disabled={removingId === s.id} className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40">
                     {removingId === s.id ? '…' : '✕'}
                   </button>
@@ -212,7 +214,7 @@ export default function WebScanner() {
                       </span>
                     ))}
                   </div>
-                  {detail.findings?.length === 0 && <p className="text-sm text-gray-500">Nessun finding rilevato.</p>}
+                  {detail.findings?.length === 0 && <p className="text-sm text-gray-500">{t('scan.noFindingsDetail')}</p>}
                   <div className="space-y-2">
                     {detail.findings?.map((f, i) => (
                       <div key={i} className="bg-corvin-50 rounded-lg px-3 py-2 border border-corvin-100">

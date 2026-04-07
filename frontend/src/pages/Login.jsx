@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 
 export default function Login() {
   const { login, register } = useAuth();
+  const { t } = useSettings();
   const navigate = useNavigate();
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({
@@ -48,8 +50,8 @@ export default function Login() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Corvin</h1>
-          <p className="text-gray-500 text-sm mt-1">La sicurezza della tua azienda, semplice.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('login.title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('login.subtitle')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-card-md border border-corvin-200 p-6">
@@ -65,7 +67,7 @@ export default function Login() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {m === 'login' ? 'Accedi' : 'Registrati'}
+                {t(`login.tab.${m}`)}
               </button>
             ))}
           </div>
@@ -73,12 +75,12 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <>
-                <Field label="Nome completo" value={form.full_name} onChange={set('full_name')} required />
-                <Field label="Nome organizzazione" value={form.organization_name} onChange={set('organization_name')} required />
+                <Field label={t('login.fullName')} value={form.full_name} onChange={set('full_name')} required />
+                <Field label={t('login.orgName')} value={form.organization_name} onChange={set('organization_name')} required />
               </>
             )}
-            <Field label="Indirizzo email" type="email" value={form.email} onChange={set('email')} required />
-            <Field label="Password" type="password" value={form.password} onChange={set('password')} required />
+            <Field label={t('login.email')} type="email" value={form.email} onChange={set('email')} required />
+            <Field label={t('login.password')} type="password" value={form.password} onChange={set('password')} required />
 
             {error && (
               <div className="flex gap-2.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
@@ -100,7 +102,7 @@ export default function Login() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               )}
-              {loading ? 'Caricamento…' : mode === 'login' ? 'Accedi' : 'Crea account'}
+              {loading ? t('common.loading') : t(`login.submit.${mode}`)}
             </button>
           </form>
         </div>

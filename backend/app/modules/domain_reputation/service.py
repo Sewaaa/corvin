@@ -121,8 +121,8 @@ def check_dns_records(domain: str) -> Dict[str, Any]:
     records["mx"] = mx
     if not mx:
         findings.append({"type": "no_mx_record", "severity": "medium",
-                         "title": "No MX record found",
-                         "detail": f"{domain} has no MX records — email delivery may be misconfigured."})
+                         "title": "Nessun record MX trovato",
+                         "detail": f"{domain} non ha record MX — la consegna email potrebbe essere mal configurata."})
 
     # SPF (cerca nei TXT)
     txt_records = _resolve_safe(domain, "TXT")
@@ -131,12 +131,12 @@ def check_dns_records(domain: str) -> Dict[str, Any]:
     records["spf"] = spf
     if not spf:
         findings.append({"type": "no_spf_record", "severity": "high",
-                         "title": "No SPF record",
-                         "detail": "Missing SPF record allows anyone to spoof email from this domain."})
+                         "title": "Nessun record SPF",
+                         "detail": "L'assenza del record SPF permette a chiunque di falsificare email da questo dominio."})
     elif len(spf) > 1:
         findings.append({"type": "multiple_spf_records", "severity": "medium",
-                         "title": "Multiple SPF records",
-                         "detail": "Only one SPF record is allowed. Multiple records cause validation failures."})
+                         "title": "Record SPF multipli",
+                         "detail": "E consentito un solo record SPF. Record multipli causano errori di validazione."})
 
     # DMARC
     dmarc_records = _resolve_safe(f"_dmarc.{domain}", "TXT")
@@ -144,16 +144,16 @@ def check_dns_records(domain: str) -> Dict[str, Any]:
     records["dmarc"] = dmarc
     if not dmarc:
         findings.append({"type": "no_dmarc_record", "severity": "high",
-                         "title": "No DMARC record",
-                         "detail": "Missing DMARC policy — phishing and spoofing attacks are not blocked."})
+                         "title": "Nessun record DMARC",
+                         "detail": "Policy DMARC mancante — gli attacchi di phishing e spoofing non vengono bloccati."})
     else:
         # Controlla policy (p=none è debole)
         dmarc_str = dmarc[0] if dmarc else ""
         if "p=none" in dmarc_str:
             findings.append({"type": "dmarc_policy_none", "severity": "medium",
-                             "title": "DMARC policy is p=none",
-                             "detail": "DMARC policy 'none' only monitors — it does not reject spoofed emails. "
-                                       "Upgrade to p=quarantine or p=reject."})
+                             "title": "Policy DMARC impostata su p=none",
+                             "detail": "La policy DMARC 'none' effettua solo monitoraggio — non rifiuta le email falsificate. "
+                                       "Aggiorna a p=quarantine o p=reject."})
 
     # NS
     ns = _resolve_safe(domain, "NS")
@@ -207,9 +207,9 @@ def check_dnsbl(domain: str) -> Dict[str, Any]:
         findings.append({
             "type": "dnsbl_listed",
             "severity": "critical",
-            "title": f"Domain listed on {len(listed_on)} DNSBL(s)",
-            "detail": f"Listed on: {', '.join(listed_on)}. "
-                      "This severely impacts email deliverability and domain reputation.",
+            "title": f"Dominio presente in {len(listed_on)} DNSBL",
+            "detail": f"Presente in: {', '.join(listed_on)}. "
+                      "Questo impatta gravemente la consegna email e la reputazione del dominio.",
         })
 
     return {
@@ -251,28 +251,28 @@ def check_ssl(domain: str) -> Dict[str, Any]:
 
             if days_remaining < 0:
                 findings.append({"type": "ssl_expired", "severity": "critical",
-                                 "title": "SSL certificate has expired",
-                                 "detail": f"Certificate expired {abs(days_remaining)} day(s) ago."})
+                                 "title": "Certificato SSL scaduto",
+                                 "detail": f"Il certificato e scaduto da {abs(days_remaining)} giorno/i."})
             elif days_remaining < 14:
                 findings.append({"type": "ssl_expiry_critical", "severity": "critical",
-                                 "title": f"SSL certificate expires in {days_remaining} days",
-                                 "detail": "Renew immediately to avoid service disruption."})
+                                 "title": f"Il certificato SSL scade tra {days_remaining} giorni",
+                                 "detail": "Rinnova immediatamente per evitare interruzioni del servizio."})
             elif days_remaining < 30:
                 findings.append({"type": "ssl_expiry_soon", "severity": "high",
-                                 "title": f"SSL certificate expires in {days_remaining} days",
-                                 "detail": "Schedule renewal within the next two weeks."})
+                                 "title": f"Il certificato SSL scade tra {days_remaining} giorni",
+                                 "detail": "Pianifica il rinnovo entro le prossime due settimane."})
 
     except ssl.SSLCertVerificationError as exc:
         findings.append({"type": "ssl_invalid_cert", "severity": "critical",
-                         "title": "SSL certificate validation failed",
+                         "title": "Validazione certificato SSL fallita",
                          "detail": str(exc)})
     except ConnectionRefusedError:
         findings.append({"type": "ssl_no_https", "severity": "high",
-                         "title": "HTTPS not available",
-                         "detail": f"{domain} does not accept connections on port 443."})
+                         "title": "HTTPS non disponibile",
+                         "detail": f"{domain} non accetta connessioni sulla porta 443."})
     except (socket.timeout, OSError) as exc:
         findings.append({"type": "ssl_unreachable", "severity": "medium",
-                         "title": "SSL check failed — host unreachable",
+                         "title": "Controllo SSL fallito — host irraggiungibile",
                          "detail": str(exc)})
 
     result["findings"] = findings
@@ -307,8 +307,8 @@ def check_whois(domain: str) -> Dict[str, Any]:
             age_days = (datetime.now() - creation.replace(tzinfo=None)).days
             if age_days < 30:
                 findings.append({"type": "recently_registered", "severity": "high",
-                                 "title": f"Domain registered {age_days} days ago",
-                                 "detail": "Recently registered domains are often used for phishing campaigns."})
+                                 "title": f"Dominio registrato {age_days} giorni fa",
+                                 "detail": "I domini registrati di recente vengono spesso utilizzati per campagne di phishing."})
 
         if expiration:
             result["expiration_date"] = expiration.isoformat() if hasattr(expiration, "isoformat") else str(expiration)
@@ -318,7 +318,7 @@ def check_whois(domain: str) -> Dict[str, Any]:
 
     except Exception as exc:
         logger.debug("whois_failed", domain=domain, error=str(exc))
-        result["error"] = "WHOIS lookup failed or data unavailable"
+        result["error"] = "Ricerca WHOIS fallita o dati non disponibili"
 
     result["findings"] = findings
     return result
@@ -446,10 +446,10 @@ async def _create_domain_notification(
 
     notification = Notification(
         organization_id=domain_obj.organization_id,
-        title=f"Domain reputation degraded: {domain_obj.domain} (score: {score}/100)",
+        title=f"Reputazione dominio degradata: {domain_obj.domain} (punteggio: {score}/100)",
         message=(
-            f"Scan found {len(findings)} issue(s) including {critical_count} critical "
-            f"for {domain_obj.domain}. Immediate review recommended."
+            f"La scansione ha trovato {len(findings)} problema/i di cui {critical_count} critici "
+            f"per {domain_obj.domain}. Si raccomanda una verifica immediata."
         ),
         severity=severity,
         source_module="domain_reputation",
@@ -478,7 +478,7 @@ async def add_domain(
         )
     )
     if existing.scalar_one_or_none() is not None:
-        raise ValueError(f"Domain '{domain_name}' is already added to this organization")
+        raise ValueError(f"Il dominio '{domain_name}' e gia stato aggiunto a questa organizzazione")
 
     token = generate_verification_token()
     domain_obj = Domain(

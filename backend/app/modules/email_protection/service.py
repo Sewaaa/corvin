@@ -318,21 +318,21 @@ def analyze_email_headers(email_data: Dict) -> Optional[Dict]:
 
     if spf_result == "fail":
         reasons.append({"type": "spf_fail", "severity": "high",
-                         "detail": f"SPF check failed for {from_domain}"})
+                         "detail": f"Validazione SPF fallita per {from_domain}"})
         total_weight += severity_weights["high"]
     elif spf_result == "softfail":
         reasons.append({"type": "spf_softfail", "severity": "medium",
-                         "detail": f"SPF softfail for {from_domain}"})
+                         "detail": f"SPF softfail per {from_domain}"})
         total_weight += severity_weights["medium"]
 
     if dkim_result == "fail":
         reasons.append({"type": "dkim_fail", "severity": "high",
-                         "detail": "DKIM signature verification failed"})
+                         "detail": "Verifica firma DKIM fallita"})
         total_weight += severity_weights["high"]
 
     if dmarc_result == "fail":
         reasons.append({"type": "dmarc_fail", "severity": "critical",
-                         "detail": f"DMARC check failed — possible spoofing of {from_domain}"})
+                         "detail": f"Validazione DMARC fallita — possibile spoofing di {from_domain}"})
         total_weight += severity_weights["critical"]
 
     # 2. From/Reply-To mismatch
@@ -345,7 +345,7 @@ def analyze_email_headers(email_data: Dict) -> Optional[Dict]:
                 reasons.append({
                     "type": "reply_to_mismatch",
                     "severity": "high",
-                    "detail": f"Reply-To domain ({reply_dom}) differs from From domain ({from_dom})",
+                    "detail": f"Il dominio Reply-To ({reply_dom}) differisce dal dominio From ({from_dom})",
                 })
                 total_weight += severity_weights["high"]
 
@@ -357,7 +357,7 @@ def analyze_email_headers(email_data: Dict) -> Optional[Dict]:
                 reasons.append({
                     "type": "display_name_spoofing",
                     "severity": "critical",
-                    "detail": f"Display name '{display_name}' impersonates '{brand}' but sends from {from_domain}",
+                    "detail": f"Il nome visualizzato '{display_name}' impersona '{brand}' ma invia da {from_domain}",
                 })
                 total_weight += severity_weights["critical"]
                 break
@@ -369,7 +369,7 @@ def analyze_email_headers(email_data: Dict) -> Optional[Dict]:
             reasons.append({
                 "type": "lookalike_domain",
                 "severity": "critical",
-                "detail": f"Domain '{from_domain}' is a lookalike of '{impersonated}'",
+                "detail": f"Il dominio '{from_domain}' e un lookalike di '{impersonated}'",
             })
             total_weight += severity_weights["critical"]
 
@@ -379,7 +379,7 @@ def analyze_email_headers(email_data: Dict) -> Optional[Dict]:
         reasons.append({
             "type": "urgency_keywords",
             "severity": "medium",
-            "detail": f"Urgency keywords detected in subject: {matched_keywords[:5]}",
+            "detail": f"Parole chiave di urgenza rilevate nell'oggetto: {matched_keywords[:5]}",
         })
         total_weight += severity_weights["medium"]
 

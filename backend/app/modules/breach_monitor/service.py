@@ -104,7 +104,7 @@ async def add_monitored_email(
         )
     )
     if existing.scalar_one_or_none() is not None:
-        raise ValueError("Email already monitored in this organization")
+        raise ValueError("Email già monitorata in questa organizzazione")
 
     monitored = MonitoredEmail(
         organization_id=organization_id,
@@ -212,10 +212,10 @@ async def _create_breach_notification(
 
     notification = Notification(
         organization_id=monitored.organization_id,
-        title=f"New breach detected: {monitored.email_masked}",
+        title=f"Nuova breach rilevata: {monitored.email_masked}",
         message=(
-            f"{new_breach_count} new breach(es) found for {monitored.email_masked}. "
-            "Change the password for this account immediately and enable MFA if not already active."
+            f"{new_breach_count} nuova/e breach trovata/e per {monitored.email_masked}. "
+            "Cambia immediatamente la password di questo account e attiva l'MFA se non ancora attivo."
         ),
         severity=NotificationSeverity.HIGH,
         source_module="breach_monitor",

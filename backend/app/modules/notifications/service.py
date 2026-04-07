@@ -165,7 +165,7 @@ def _build_email_html(notification: Notification) -> str:
         </p>
       </div>
       <p style="color: #9ca3af; font-size: 11px; margin-top: 16px;">
-        Corvin Security Platform &mdash; Silent guardian for your digital perimeter.
+        Corvin Security Platform &mdash; Guardiano silenzioso del tuo perimetro digitale.
       </p>
     </body></html>
     """

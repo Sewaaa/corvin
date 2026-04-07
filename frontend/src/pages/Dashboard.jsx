@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import StatCard from '../components/StatCard';
 import SeverityBadge from '../components/SeverityBadge';
+import { useSettings } from '../context/SettingsContext';
 import { breach } from '../api/breach';
 import { domain } from '../api/domain';
 import { notifications } from '../api/notifications';
@@ -9,40 +10,39 @@ import { sandbox } from '../api/sandbox';
 import { api } from '../api/client';
 
 const MODULE_CARDS = [
-  { to: '/breach',        label: 'Breach Monitor',    desc: 'Verifica se le email aziendali sono comparse in data breach pubblici', color: 'bg-red-50 border-red-100', iconColor: 'text-red-600', icon: ShieldAlertIcon },
-  { to: '/domain',        label: 'Domain Reputation', desc: 'Controlla la salute dei tuoi domini: DNS, SSL e blacklist',            color: 'bg-blue-50 border-blue-100', iconColor: 'text-blue-600', icon: GlobeIcon },
-  { to: '/web-scan',      label: 'Web Scanner',       desc: 'Scansione passiva del sito per trovare configurazioni non sicure',     color: 'bg-indigo-50 border-indigo-100', iconColor: 'text-indigo-600', icon: ScanIcon },
-  { to: '/email',         label: 'Email Protection',  desc: 'Analisi delle email per phishing, spoofing e allegati pericolosi',    color: 'bg-amber-50 border-amber-100', iconColor: 'text-amber-600', icon: MailIcon },
-  { to: '/sandbox',       label: 'File Sandbox',      desc: 'Carica file per analizzarli alla ricerca di virus e malware',         color: 'bg-orange-50 border-orange-100', iconColor: 'text-orange-600', icon: FileIcon },
-  { to: '/notifications', label: 'Notifiche',         desc: 'Tutti gli alert generati dai moduli di monitoraggio',                 color: 'bg-green-50 border-green-100', iconColor: 'text-green-600', icon: BellIcon },
+  { to: '/breach',        labelKey: 'dash.mod.breach',    descKey: 'dash.mod.breachDesc',   color: 'bg-red-50 border-red-100', iconColor: 'text-red-600', icon: ShieldAlertIcon },
+  { to: '/domain',        labelKey: 'dash.mod.domain',    descKey: 'dash.mod.domainDesc',   color: 'bg-blue-50 border-blue-100', iconColor: 'text-blue-600', icon: GlobeIcon },
+  { to: '/web-scan',      labelKey: 'dash.mod.webScan',   descKey: 'dash.mod.webScanDesc',  color: 'bg-indigo-50 border-indigo-100', iconColor: 'text-indigo-600', icon: ScanIcon },
+  { to: '/email',         labelKey: 'dash.mod.email',     descKey: 'dash.mod.emailDesc',    color: 'bg-amber-50 border-amber-100', iconColor: 'text-amber-600', icon: MailIcon },
+  { to: '/sandbox',       labelKey: 'dash.mod.sandbox',   descKey: 'dash.mod.sandboxDesc',  color: 'bg-orange-50 border-orange-100', iconColor: 'text-orange-600', icon: FileIcon },
+  { to: '/notifications', labelKey: 'dash.mod.notif',     descKey: 'dash.mod.notifDesc',    color: 'bg-green-50 border-green-100', iconColor: 'text-green-600', icon: BellIcon },
 ];
 
-function RiskGauge({ score }) {
+function RiskGauge({ score, t }) {
   const isOk = score === 0;
   const isLow = score > 0 && score < 30;
   const isMed = score >= 30 && score < 60;
   const isHigh = score >= 60 && score < 80;
-  const isCrit = score >= 80;
 
-  const { color, bgBar, bgLight, label, message } = isOk
-    ? { color: 'text-green-700', bgBar: 'bg-green-500', bgLight: 'bg-green-50 border-green-200', label: 'Tutto sotto controllo', message: 'Nessuna minaccia attiva rilevata.' }
+  const { color, bgBar, bgLight, labelKey, messageKey } = isOk
+    ? { color: 'text-green-700', bgBar: 'bg-green-500', bgLight: 'bg-green-50 border-green-200', labelKey: 'dash.risk.safe', messageKey: 'dash.risk.safeSub' }
     : isLow
-    ? { color: 'text-blue-700', bgBar: 'bg-blue-500', bgLight: 'bg-blue-50 border-blue-200', label: 'Situazione normale', message: 'Minacce di bassa priorità presenti.' }
+    ? { color: 'text-blue-700', bgBar: 'bg-blue-500', bgLight: 'bg-blue-50 border-blue-200', labelKey: 'dash.risk.low', messageKey: 'dash.risk.lowSub' }
     : isMed
-    ? { color: 'text-amber-700', bgBar: 'bg-amber-500', bgLight: 'bg-amber-50 border-amber-200', label: 'Attenzione richiesta', message: 'Alcune minacce richiedono verifica.' }
+    ? { color: 'text-amber-700', bgBar: 'bg-amber-500', bgLight: 'bg-amber-50 border-amber-200', labelKey: 'dash.risk.medium', messageKey: 'dash.risk.mediumSub' }
     : isHigh
-    ? { color: 'text-orange-700', bgBar: 'bg-orange-500', bgLight: 'bg-orange-50 border-orange-200', label: 'Rischio elevato', message: 'Minacce importanti da gestire subito.' }
-    : { color: 'text-red-700', bgBar: 'bg-red-600', bgLight: 'bg-red-50 border-red-200', label: 'Azione necessaria', message: 'Minacce critiche in attesa di risposta.' };
+    ? { color: 'text-orange-700', bgBar: 'bg-orange-500', bgLight: 'bg-orange-50 border-orange-200', labelKey: 'dash.risk.high', messageKey: 'dash.risk.highSub' }
+    : { color: 'text-red-700', bgBar: 'bg-red-600', bgLight: 'bg-red-50 border-red-200', labelKey: 'dash.risk.critical', messageKey: 'dash.risk.criticalSub' };
 
   return (
     <div className={`bg-white rounded-xl shadow-card border p-5 ${bgLight.split(' ')[1]}`}>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Livello di rischio</p>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('dash.riskScore')}</p>
       <div className="flex items-end gap-4 mb-4">
         <span className={`text-5xl font-bold tabular-nums ${color}`}>{score}</span>
         <div className="flex-1 mb-1.5">
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-sm font-semibold ${color}`}>{label}</span>
-            <span className="text-xs text-gray-400">su 100</span>
+            <span className={`text-sm font-semibold ${color}`}>{t(labelKey)}</span>
+            <span className="text-xs text-gray-400">{t('dash.outOf')}</span>
           </div>
           <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
             <div
@@ -52,17 +52,17 @@ function RiskGauge({ score }) {
           </div>
         </div>
       </div>
-      <p className="text-sm text-gray-600">{message}</p>
+      <p className="text-sm text-gray-600">{t(messageKey)}</p>
     </div>
   );
 }
 
-function RecentActivity({ items }) {
+function RecentActivity({ items, t }) {
   if (!items?.length) {
     return (
       <div className="bg-white rounded-xl shadow-card border border-corvin-200 p-5">
-        <p className="text-sm font-semibold text-gray-700 mb-3">Attività recente</p>
-        <p className="text-sm text-gray-400 py-4 text-center">Nessuna attività recente.</p>
+        <p className="text-sm font-semibold text-gray-700 mb-3">{t('dash.activity')}</p>
+        <p className="text-sm text-gray-400 py-4 text-center">{t('dash.noActivity')}</p>
       </div>
     );
   }
@@ -70,9 +70,9 @@ function RecentActivity({ items }) {
   return (
     <div className="bg-white rounded-xl shadow-card border border-corvin-200 p-5">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm font-semibold text-gray-700">Attività recente</p>
+        <p className="text-sm font-semibold text-gray-700">{t('dash.activity')}</p>
         <Link to="/notifications" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-          Vedi tutte →
+          {t('dash.viewAll')}
         </Link>
       </div>
       <div className="space-y-1">
@@ -94,6 +94,7 @@ function RecentActivity({ items }) {
 }
 
 export default function Dashboard() {
+  const { t } = useSettings();
   const [stats, setStats] = useState({ emails: 0, domains: 0, unread: 0, threats: 0 });
   const [apiOk, setApiOk] = useState(null);
   const [riskScore, setRiskScore] = useState(null);
@@ -135,15 +136,15 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Panoramica della sicurezza aziendale</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('dash.title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('dash.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-corvin-200 shadow-card text-sm">
           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
             apiOk === null ? 'bg-amber-400 animate-pulse' : apiOk ? 'bg-green-500' : 'bg-red-500'
           }`} />
           <span className="text-gray-600">
-            Sistema {apiOk === null ? 'in verifica' : apiOk ? 'operativo' : 'non raggiungibile'}
+            {apiOk === null ? t('dash.api.checking') : apiOk ? t('dash.api.online') : t('dash.api.offline')}
           </span>
         </div>
       </div>
@@ -152,7 +153,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         <div className="lg:col-span-1">
           {riskScore !== null ? (
-            <RiskGauge score={riskScore} />
+            <RiskGauge score={riskScore} t={t} />
           ) : (
             <div className="bg-white rounded-xl shadow-card border border-corvin-200 p-5 h-full flex items-center justify-center">
               <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full" />
@@ -160,22 +161,22 @@ export default function Dashboard() {
           )}
         </div>
         <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-          <StatCard label="Email monitorate" value={stats.emails} to="/breach" />
-          <StatCard label="Domini tracciati" value={stats.domains} to="/domain" />
-          <StatCard label="Notifiche non lette" value={stats.unread} accent={stats.unread > 0} to="/notifications" />
-          <StatCard label="File malevoli" value={stats.threats} accent={stats.threats > 0} to="/sandbox" />
+          <StatCard label={t('dash.stat.emails')} value={stats.emails} to="/breach" />
+          <StatCard label={t('dash.stat.domains')} value={stats.domains} to="/domain" />
+          <StatCard label={t('dash.stat.unread')} value={stats.unread} accent={stats.unread > 0} to="/notifications" />
+          <StatCard label={t('dash.stat.malicious')} value={stats.threats} accent={stats.threats > 0} to="/sandbox" />
         </div>
       </div>
 
       {/* Recent activity */}
       <div className="mb-10">
-        <RecentActivity items={recentNotifs} />
+        <RecentActivity items={recentNotifs} t={t} />
       </div>
 
       {/* Module grid */}
-      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Moduli disponibili</h2>
+      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('dash.modules')}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {MODULE_CARDS.map(({ to, label, desc, color, iconColor, icon: Icon }) => (
+        {MODULE_CARDS.map(({ to, labelKey, descKey, color, iconColor, icon: Icon }) => (
           <Link
             key={to}
             to={to}
@@ -187,9 +188,9 @@ export default function Dashboard() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                  {label}
+                  {t(labelKey)}
                 </h3>
-                <p className="text-sm text-gray-500 mt-0.5 leading-snug">{desc}</p>
+                <p className="text-sm text-gray-500 mt-0.5 leading-snug">{t(descKey)}</p>
               </div>
             </div>
           </Link>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { users as usersApi } from '../api/users';
 import { audit as auditApi } from '../api/audit';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -28,6 +29,7 @@ const ROLE_COLORS = {
 };
 
 function UsersTab() {
+  const { t } = useSettings();
   const { user: currentUser } = useAuth();
   const { data: userList, loading, error, refetch } = useApi(() => usersApi.list());
   const [showInvite, setShowInvite] = useState(false);
@@ -48,7 +50,7 @@ function UsersTab() {
       setForm({ email: '', full_name: '', temporary_password: '', role: 'viewer' });
       refetch();
     } catch (err) {
-      setSaveError(err.message ?? 'Errore durante l\'invito.');
+      setSaveError(err.message ?? t('settings.inviteError'));
     } finally {
       setSaving(false);
     }
@@ -57,14 +59,14 @@ function UsersTab() {
   const handleRoleChange = async (userId, newRole) => {
     setActionError('');
     try { await usersApi.updateRole(userId, newRole); refetch(); }
-    catch (err) { setActionError(err.message ?? 'Errore durante il cambio ruolo.'); }
+    catch (err) { setActionError(err.message ?? t('settings.roleError')); }
   };
 
   const handleDeactivate = async (userId) => {
-    if (!window.confirm('Disattivare questo utente? Non potrà più accedere.')) return;
+    if (!window.confirm(t('settings.deactivateConfirm'))) return;
     setActionError('');
     try { await usersApi.deactivate(userId); refetch(); }
-    catch (err) { setActionError(err.message ?? 'Errore durante la disattivazione.'); }
+    catch (err) { setActionError(err.message ?? t('settings.deactivateError')); }
   };
 
   return (
@@ -74,7 +76,7 @@ function UsersTab() {
       {isAdmin && (
         <div className="flex justify-end mb-4">
           <button onClick={() => { setShowInvite((v) => !v); setSaveError(''); }} className={showInvite ? 'btn-secondary' : 'btn-primary'}>
-            {showInvite ? '✕ Annulla' : '+ Invita utente'}
+            {showInvite ? t('common.cancel') : t('settings.inviteBtn')}
           </button>
         </div>
       )}
@@ -83,19 +85,19 @@ function UsersTab() {
         <form onSubmit={handleInvite} className="bg-white rounded-xl shadow-card border border-corvin-200 p-4 mb-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('settings.inviteEmail')}</label>
               <input type="email" value={form.email} onChange={(e) => setForm(f => ({...f, email: e.target.value}))} required className="form-input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('settings.inviteName')}</label>
               <input type="text" value={form.full_name} onChange={(e) => setForm(f => ({...f, full_name: e.target.value}))} required className="form-input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password temporanea</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('settings.invitePassword')}</label>
               <input type="password" value={form.temporary_password} onChange={(e) => setForm(f => ({...f, temporary_password: e.target.value}))} required className="form-input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Ruolo</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('settings.inviteRole')}</label>
               <select value={form.role} onChange={(e) => setForm(f => ({...f, role: e.target.value}))} className="form-select w-full">
                 <option value="viewer">Viewer</option>
                 <option value="analyst">Analyst</option>
@@ -105,14 +107,14 @@ function UsersTab() {
           </div>
           {saveError && <p className="text-red-600 text-sm">{saveError}</p>}
           <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? 'Invito in corso...' : 'Invia invito'}
+            {saving ? t('settings.inviting') : t('settings.inviteSend')}
           </button>
         </form>
       )}
 
       {loading && <LoadingSpinner />}
       {error && <p className="text-red-600 text-sm">{error}</p>}
-      {!loading && (userList ?? []).length === 0 && <EmptyState title="Nessun utente" description="Nessun utente trovato." />}
+      {!loading && (userList ?? []).length === 0 && <EmptyState title={t('settings.noUsers')} description={t('settings.noUsersDesc')} />}
 
       {!loading && (userList ?? []).length > 0 && (
         <div className="space-y-2">
@@ -126,8 +128,8 @@ function UsersTab() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-900 font-semibold truncate">{u.full_name}</span>
-                      {!u.is_active && <span className="text-xs text-gray-400">(disattivato)</span>}
-                      {u.id === currentUser?.id && <span className="text-xs text-blue-600 font-medium">(tu)</span>}
+                      {!u.is_active && <span className="text-xs text-gray-400">{t('settings.deactivated')}</span>}
+                      {u.id === currentUser?.id && <span className="text-xs text-blue-600 font-medium">{t('settings.you')}</span>}
                     </div>
                     <p className="text-xs text-gray-400 truncate">{u.email}</p>
                   </div>
@@ -149,7 +151,7 @@ function UsersTab() {
                         <option value="admin">Admin</option>
                       </select>
                       <button onClick={() => handleDeactivate(u.id)} className="text-xs text-red-500 hover:text-red-700 font-medium">
-                        Disattiva
+                        {t('settings.deactivate')}
                       </button>
                     </>
                   )}
@@ -164,6 +166,7 @@ function UsersTab() {
 }
 
 function AuditTab() {
+  const { t } = useSettings();
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState('');
   const { data, loading, error } = useApi(() => auditApi.list(page, 50, filter), [page, filter]);
@@ -187,24 +190,24 @@ function AuditTab() {
           onChange={(e) => { setFilter(e.target.value); setPage(1); }}
           className="form-select"
         >
-          <option value="">Tutte le azioni</option>
-          <option value="user.login">Login</option>
-          <option value="user.register">Registrazione</option>
-          <option value="user.invite">Inviti</option>
-          <option value="user.role_change">Cambio ruolo</option>
-          <option value="breach.check">Breach check</option>
-          <option value="domain.add">Dominio aggiunto</option>
-          <option value="domain.verified">Dominio verificato</option>
-          <option value="scan.create">Scan creata</option>
-          <option value="sandbox.upload">File caricato</option>
+          <option value="">{t('settings.allActions')}</option>
+          <option value="user.login">{t('settings.auditLogin')}</option>
+          <option value="user.register">{t('settings.auditRegister')}</option>
+          <option value="user.invite">{t('settings.auditInvite')}</option>
+          <option value="user.role_change">{t('settings.auditRoleChange')}</option>
+          <option value="breach.check">{t('settings.auditBreachCheck')}</option>
+          <option value="domain.add">{t('settings.auditDomainAdd')}</option>
+          <option value="domain.verified">{t('settings.auditDomainVerified')}</option>
+          <option value="scan.create">{t('settings.auditScanCreate')}</option>
+          <option value="sandbox.upload">{t('settings.auditFileUpload')}</option>
         </select>
-        <span className="text-sm text-gray-500">{total} eventi trovati</span>
+        <span className="text-sm text-gray-500">{t('settings.eventsFound', { count: total })}</span>
       </div>
 
       {loading && <LoadingSpinner />}
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {!loading && items.length === 0 && (
-        <EmptyState title="Nessun evento" description="Il log di audit apparirà qui con le attività degli utenti." />
+        <EmptyState title={t('settings.noEvents')} description={t('settings.noEventsDesc')} />
       )}
 
       {!loading && items.length > 0 && (
@@ -243,11 +246,11 @@ function AuditTab() {
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 mt-4">
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-30 font-medium">
-                ← Precedente
+                {t('settings.prevPage')}
               </button>
-              <span className="text-sm text-gray-500">Pagina {page} di {totalPages}</span>
+              <span className="text-sm text-gray-500">{t('settings.pageOf', { page, total: totalPages })}</span>
               <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-30 font-medium">
-                Successiva →
+                {t('settings.nextPage')}
               </button>
             </div>
           )}
@@ -258,30 +261,31 @@ function AuditTab() {
 }
 
 function OrgInfoTab() {
+  const { t } = useSettings();
   const { data: orgData, loading } = useApi(() =>
     import('../api/client').then(({ api }) => api.get('/organizations/')),
   );
 
   if (loading) return <LoadingSpinner />;
-  if (!orgData) return <p className="text-gray-500 text-sm">Impossibile caricare i dati dell'organizzazione.</p>;
+  if (!orgData) return <p className="text-gray-500 text-sm">{t('settings.orgError')}</p>;
 
   return (
     <div className="bg-white rounded-xl shadow-card border border-corvin-200 p-5 max-w-lg">
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Nome organizzazione</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('settings.orgName')}</label>
           <p className="text-sm text-gray-900 font-semibold">{orgData.name}</p>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Slug</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('settings.orgSlug')}</label>
           <code className="text-sm text-gray-700 bg-corvin-100 px-2 py-0.5 rounded border border-corvin-200">{orgData.slug}</code>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Stato</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('settings.orgStatus')}</label>
           <SeverityBadge value={orgData.is_active ? 'active' : 'inactive'} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Creata il</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('settings.orgCreated')}</label>
           <p className="text-sm text-gray-700">{new Date(orgData.created_at).toLocaleString('it-IT')}</p>
         </div>
       </div>
@@ -290,19 +294,20 @@ function OrgInfoTab() {
 }
 
 export default function Settings() {
+  const { t } = useSettings();
   const [tab, setTab] = useState('users');
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Impostazioni</h1>
-        <p className="text-gray-500 text-sm mt-1">Gestione utenti, organizzazione e audit trail</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
+        <p className="text-gray-500 text-sm mt-1">{t('settings.subtitle')}</p>
       </div>
 
       <div className="flex border-b border-corvin-200 mb-6 gap-1">
-        <Tab label="Utenti" active={tab === 'users'} onClick={() => setTab('users')} />
-        <Tab label="Audit Log" active={tab === 'audit'} onClick={() => setTab('audit')} />
-        <Tab label="Organizzazione" active={tab === 'org'} onClick={() => setTab('org')} />
+        <Tab label={t('settings.tabUsers')} active={tab === 'users'} onClick={() => setTab('users')} />
+        <Tab label={t('settings.tabAudit')} active={tab === 'audit'} onClick={() => setTab('audit')} />
+        <Tab label={t('settings.tabOrg')} active={tab === 'org'} onClick={() => setTab('org')} />
       </div>
 
       {tab === 'users' && <UsersTab />}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { notifications as notifApi } from '../api/notifications';
+import { useSettings } from '../context/SettingsContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -53,6 +54,7 @@ function Tab({ label, active, onClick }) {
 }
 
 export default function Notifications() {
+  const { t } = useSettings();
   const [tab, setTab] = useState('notifications');
   const { data, loading, error, refetch } = useApi(() => notifApi.list());
   const { data: webhooks, loading: loadingW, refetch: refetchW } = useApi(() => notifApi.listWebhooks());
@@ -96,22 +98,22 @@ export default function Notifications() {
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifiche</h1>
-          <p className="text-gray-500 text-sm mt-1">Alert in-app e webhook con firma HMAC-SHA256</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('notif.title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('notif.subtitle')}</p>
         </div>
         <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
-          Guida
+          {t('common.guide')}
         </button>
       </div>
 
       <div className="flex border-b border-corvin-200 mb-6 gap-1">
         <Tab
-          label={`Notifiche${data?.unread ? ` · ${data.unread} non lette` : ''}`}
+          label={data?.unread > 0 ? t('notif.tabNotifUnread', { count: data.unread }) : t('notif.tabNotif')}
           active={tab === 'notifications'}
           onClick={() => setTab('notifications')}
         />
-        <Tab label="Webhook" active={tab === 'webhooks'} onClick={() => setTab('webhooks')} />
+        <Tab label={t('notif.tabWebhook')} active={tab === 'webhooks'} onClick={() => setTab('webhooks')} />
       </div>
 
       {tab === 'notifications' && (
@@ -119,7 +121,7 @@ export default function Notifications() {
           {data?.unread > 0 && (
             <div className="flex justify-end mb-4">
               <button onClick={handleMarkAll} className="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                Segna tutte come lette
+                {t('notif.markAll')}
               </button>
             </div>
           )}
@@ -128,7 +130,7 @@ export default function Notifications() {
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
           {!loading && data?.items?.length === 0 && (
-            <EmptyState title="Nessuna notifica" description="Le notifiche appariranno qui quando i moduli rilevano eventi." />
+            <EmptyState title={t('notif.emptyTitle')} description={t('notif.emptyDesc')} />
           )}
 
           {!loading && data?.items?.length > 0 && (
@@ -159,7 +161,7 @@ export default function Notifications() {
                         onClick={() => handleMarkRead(n.id)}
                         className="text-xs text-gray-400 hover:text-gray-700 flex-shrink-0 font-medium"
                       >
-                        ✓ Letta
+                        {t('notif.markRead')}
                       </button>
                     )}
                   </div>
@@ -174,14 +176,14 @@ export default function Notifications() {
         <div>
           <div className="flex justify-end mb-4">
             <button onClick={() => setShowWhForm((v) => !v)} className={showWhForm ? 'btn-secondary' : 'btn-primary'}>
-              {showWhForm ? '✕ Annulla' : '+ Aggiungi webhook'}
+              {showWhForm ? t('common.cancel') : t('notif.addWebhook')}
             </button>
           </div>
 
           {showWhForm && (
             <form onSubmit={handleAddWebhook} className="bg-white rounded-xl shadow-card border border-corvin-200 p-4 mb-4 space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">URL</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('notif.whUrl')}</label>
                 <input
                   type="url"
                   value={whForm.url}
@@ -192,7 +194,7 @@ export default function Notifications() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Secret HMAC <span className="text-gray-400 font-normal">(opzionale)</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('notif.whSecret')}</label>
                 <input
                   type="password"
                   value={whForm.secret}
@@ -202,23 +204,23 @@ export default function Notifications() {
               </div>
               {whError && <p className="text-red-600 text-sm">{whError}</p>}
               <button type="submit" disabled={savingWh} className="btn-primary">
-                {savingWh ? 'Salvataggio…' : 'Salva webhook'}
+                {savingWh ? t('notif.whSaving') : t('notif.whSave')}
               </button>
             </form>
           )}
 
           {loadingW && <LoadingSpinner />}
           {!loadingW && webhooks?.length === 0 && (
-            <EmptyState title="Nessun webhook configurato" description="Aggiungi un endpoint per ricevere notifiche in tempo reale." />
+            <EmptyState title={t('notif.whEmptyTitle')} description={t('notif.whEmptyDesc')} />
           )}
           {!loadingW && webhooks?.length > 0 && (
             <div className="bg-white rounded-xl shadow-card border border-corvin-200 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-corvin-200 bg-corvin-50">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">URL</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Eventi</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Stato</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('notif.whUrl')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('notif.whEvents')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('notif.whStatus')}</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
@@ -230,8 +232,8 @@ export default function Notifications() {
                       <td className="px-4 py-3"><SeverityBadge value={w.is_active ? 'active' : 'inactive'} /></td>
                       <td className="px-4 py-3">
                         <div className="flex gap-3 justify-end">
-                          <button onClick={() => handleTestWebhook(w.id)} className="text-xs text-blue-600 hover:underline font-medium">Test</button>
-                          <button onClick={() => notifApi.deleteWebhook(w.id).then(refetchW)} className="text-xs text-red-500 hover:underline font-medium">Rimuovi</button>
+                          <button onClick={() => handleTestWebhook(w.id)} className="text-xs text-blue-600 hover:underline font-medium">{t('notif.whTest')}</button>
+                          <button onClick={() => notifApi.deleteWebhook(w.id).then(refetchW)} className="text-xs text-red-500 hover:underline font-medium">{t('common.remove')}</button>
                         </div>
                       </td>
                     </tr>

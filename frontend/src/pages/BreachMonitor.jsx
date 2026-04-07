@@ -4,6 +4,7 @@ import { breach } from '../api/breach';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import InfoModal from '../components/InfoModal';
+import { useSettings } from '../context/SettingsContext';
 
 const INFO_SECTIONS = [
   {
@@ -81,6 +82,7 @@ const DATA_CLASS_COLORS = {
 const getDataClassColor = (cls) => DATA_CLASS_COLORS[cls] ?? 'text-gray-600 bg-gray-100 border-gray-200';
 
 export default function BreachMonitor() {
+  const { t } = useSettings();
   const { data: emails, loading, error, refetch } = useApi(() => breach.list());
   const { data: historyData } = useApi(() => breach.history(1, 100));
   const [newEmail, setNewEmail] = useState('');
@@ -108,19 +110,19 @@ export default function BreachMonitor() {
       setAddResult(results?.[0] ?? null);
       refetch();
     } catch (err) {
-      setAddError('Errore durante la verifica. Riprova più tardi.');
+      setAddError(t('breach.addError'));
     } finally {
       setAdding(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Rimuovere questo indirizzo email?')) return;
+    if (!confirm(t('breach.removeConfirm'))) return;
     try {
       await breach.remove(id);
       refetch();
     } catch {
-      alert('Errore durante la rimozione. Riprova più tardi.');
+      alert(t('breach.removeError'));
     }
   };
 
@@ -132,26 +134,26 @@ export default function BreachMonitor() {
 
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Breach Monitor</h1>
-          <p className="text-gray-500 text-sm mt-1">Verifica se le email aziendali sono comparse in data breach</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('breach.title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('breach.subtitle')}</p>
         </div>
         <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" /></svg>
-          Guida
+          {t('common.guide')}
         </button>
       </div>
 
       <form onSubmit={handleAdd} className="flex gap-3 mb-4">
         <input
           type="email"
-          placeholder="email@example.com"
+          placeholder={t('breach.placeholder')}
           value={newEmail}
           onChange={(e) => setNewEmail(e.target.value)}
           required
           className="form-input flex-1"
         />
         <button type="submit" disabled={adding} className="btn-primary whitespace-nowrap">
-          {adding ? 'Verifica in corso…' : 'Aggiungi e verifica'}
+          {adding ? t('breach.adding') : t('breach.addBtn')}
         </button>
       </form>
 
@@ -164,8 +166,8 @@ export default function BreachMonitor() {
             : 'bg-green-50 border border-green-200 text-green-700'
         }`}>
           {addResult.is_breached
-            ? `⚠ ${addResult.email_masked} trovata in ${addResult.breach_count} breach.`
-            : `✓ ${addResult.email_masked} non trovata in nessuna breach nota.`}
+            ? `⚠ ${addResult.email_masked} ${t('breach.found', { count: addResult.breach_count })}`
+            : `✓ ${addResult.email_masked} ${t('breach.notFound')}`}
         </div>
       )}
 
@@ -173,7 +175,7 @@ export default function BreachMonitor() {
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
       {!loading && emails?.length === 0 && (
-        <EmptyState title="Nessuna email monitorata" description="Aggiungi un indirizzo email per avviare il monitoraggio breach." />
+        <EmptyState title={t('breach.emptyTitle')} description={t('breach.emptyDesc')} />
       )}
 
       {!loading && emails?.length > 0 && (
@@ -181,9 +183,9 @@ export default function BreachMonitor() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-corvin-200 bg-corvin-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Ultima verifica</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Stato</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('breach.thEmail')}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('breach.thLastCheck')}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('breach.thStatus')}</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -206,14 +208,14 @@ export default function BreachMonitor() {
                       <div className="flex gap-3 justify-end items-center">
                         {em.breach_count > 0 && (
                           <span className="text-xs text-gray-400">
-                            {expandedId === em.id ? '▲ Nascondi' : '▼ Dettagli'}
+                            {expandedId === em.id ? t('breach.hide') : t('breach.details')}
                           </span>
                         )}
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(em.id); }}
                           className="text-xs text-red-500 hover:text-red-700 hover:underline"
                         >
-                          Rimuovi
+                          {t('common.remove')}
                         </button>
                       </div>
                     </td>
@@ -222,7 +224,7 @@ export default function BreachMonitor() {
                     <tr key={`${em.id}-detail`} className="bg-corvin-50 border-b border-corvin-100">
                       <td colSpan={4} className="px-6 py-4">
                         <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">
-                          Breach rilevate ({em.breach_count})
+                          {t('breach.detected')} ({em.breach_count})
                         </p>
                         {/* Breach names — compact badges */}
                         <div className="flex flex-wrap gap-2 mb-3">
@@ -242,7 +244,7 @@ export default function BreachMonitor() {
                           if (!allClasses.length) return null;
                           return (
                             <div className="mb-4">
-                              <p className="text-xs text-gray-500 mb-1.5 font-medium">Dati esposti:</p>
+                              <p className="text-xs text-gray-500 mb-1.5 font-medium">{t('breach.dataExposed')}</p>
                               <div className="flex flex-wrap gap-1.5">
                                 {allClasses.map((cls, j) => (
                                   <span key={j} className={`px-1.5 py-0.5 text-xs rounded border ${getDataClassColor(cls)}`}>
@@ -256,7 +258,7 @@ export default function BreachMonitor() {
 
                         <div className="border-t border-corvin-200 pt-3">
                           <p className="text-xs font-bold text-blue-600 mb-2.5 uppercase tracking-wide">
-                            Piano d'azione consigliato
+                            {t('breach.actionPlan')}
                           </p>
                           <div className="space-y-2">
                             {ACTION_PLAN.map((step, i) => (

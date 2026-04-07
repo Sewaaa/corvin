@@ -1,20 +1,22 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 
 const NAV_ITEMS = [
-  { to: '/',               label: 'Dashboard',         icon: HomeIcon },
-  { to: '/breach',         label: 'Breach Monitor',    icon: ShieldIcon },
-  { to: '/domain',         label: 'Domain Reputation', icon: GlobeIcon },
-  { to: '/web-scan',       label: 'Web Scanner',       icon: SearchIcon },
-  { to: '/email',          label: 'Email Protection',  icon: MailIcon },
-  { to: '/sandbox',        label: 'File Sandbox',      icon: FileIcon },
-  { to: '/notifications',  label: 'Notifiche',         icon: BellIcon },
-  { to: '/reports',        label: 'Report',            icon: ChartIcon },
-  { to: '/settings',       label: 'Impostazioni',      icon: GearIcon },
+  { to: '/',               labelKey: 'nav.dashboard',       icon: HomeIcon },
+  { to: '/breach',         labelKey: 'nav.breach',          icon: ShieldIcon },
+  { to: '/domain',         labelKey: 'nav.domain',          icon: GlobeIcon },
+  { to: '/web-scan',       labelKey: 'nav.webScan',         icon: SearchIcon },
+  { to: '/email',          labelKey: 'nav.email',           icon: MailIcon },
+  { to: '/sandbox',        labelKey: 'nav.sandbox',         icon: FileIcon },
+  { to: '/notifications',  labelKey: 'nav.notifications',   icon: BellIcon },
+  { to: '/reports',        labelKey: 'nav.reports',          icon: ChartIcon },
+  { to: '/settings',       labelKey: 'nav.settings',        icon: GearIcon },
 ];
 
 export default function Sidebar({ unreadCount = 0 }) {
   const { user, logout } = useAuth();
+  const { t, lang, theme, toggleLang, toggleTheme } = useSettings();
   const initials = user?.full_name
     ? user.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
     : '?';
@@ -31,14 +33,14 @@ export default function Sidebar({ unreadCount = 0 }) {
           </div>
           <div>
             <span className="text-base font-bold text-white tracking-tight">Corvin</span>
-            <p className="text-xs text-white/40 leading-none mt-0.5">Security Platform</p>
+            <p className="text-xs text-white/40 leading-none mt-0.5">{t('nav.platform')}</p>
           </div>
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+        {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -52,7 +54,7 @@ export default function Sidebar({ unreadCount = 0 }) {
             }
           >
             <Icon className="w-4 h-4 flex-shrink-0" />
-            <span className="flex-1 truncate">{label}</span>
+            <span className="flex-1 truncate">{t(labelKey)}</span>
             {to === '/notifications' && unreadCount > 0 && (
               <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center leading-none font-semibold">
                 {unreadCount > 99 ? '99+' : unreadCount}
@@ -61,6 +63,30 @@ export default function Sidebar({ unreadCount = 0 }) {
           </NavLink>
         ))}
       </nav>
+
+      {/* Lang / Theme toggles */}
+      <div className="px-3 py-2 border-t border-white/10 flex gap-2">
+        <button
+          onClick={toggleLang}
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          title={lang === 'it' ? 'Switch to English' : 'Passa a Italiano'}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" /></svg>
+          {lang === 'it' ? 'IT' : 'EN'}
+        </button>
+        <button
+          onClick={toggleTheme}
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          title={theme === 'light' ? t('theme.dark') : t('theme.light')}
+        >
+          {theme === 'light' ? (
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
+          ) : (
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></svg>
+          )}
+          {theme === 'light' ? t('theme.dark') : t('theme.light')}
+        </button>
+      </div>
 
       {/* User */}
       <div className="px-3 py-3 border-t border-white/10">
@@ -77,7 +103,7 @@ export default function Sidebar({ unreadCount = 0 }) {
           onClick={logout}
           className="w-full mt-1 text-xs text-white/40 hover:text-white/80 transition-colors py-1.5 text-left px-2"
         >
-          Disconnetti →
+          {t('nav.logout')}
         </button>
       </div>
     </aside>
