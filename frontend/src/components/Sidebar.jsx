@@ -22,7 +22,7 @@ export default function Sidebar({ unreadCount = 0 }) {
     : '?';
 
   return (
-    <aside className="w-60 min-h-screen bg-corvin-nav flex flex-col flex-shrink-0">
+    <aside className="w-60 h-full bg-corvin-nav flex flex-col flex-shrink-0">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-2.5">
