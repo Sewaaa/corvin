@@ -224,29 +224,35 @@ export default function BreachMonitor() {
                         <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">
                           Breach rilevate ({em.breach_count})
                         </p>
-                        <div className="space-y-2 mb-4">
+                        {/* Breach names — compact badges */}
+                        <div className="flex flex-wrap gap-2 mb-3">
                           {(breachDetailsByEmail[em.email_masked] ?? em.breach_names.map(n => ({ breach_name: n, data_classes: [] }))).map((b, i) => (
-                            <div key={i} className="bg-white rounded-lg px-3 py-2 border border-corvin-200">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-semibold text-red-600">{b.breach_name}</span>
-                                {b.breach_date && <span className="text-xs text-gray-400">{b.breach_date}</span>}
-                              </div>
-                              {b.data_classes?.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 mt-1">
-                                  <span className="text-xs text-gray-400 mr-1">Dati esposti:</span>
-                                  {b.data_classes.map((cls, j) => (
-                                    <span key={j} className={`px-1.5 py-0.5 text-xs rounded border ${getDataClassColor(cls)}`}>
-                                      {cls}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                              {b.description && (
-                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{b.description}</p>
-                              )}
-                            </div>
+                            <span key={i} className="px-2 py-0.5 text-xs rounded bg-red-50 border border-red-200 text-red-600 font-medium">
+                              {b.breach_name}
+                            </span>
                           ))}
                         </div>
+
+                        {/* Data classes exposed — aggregated unique list */}
+                        {(() => {
+                          const allClasses = [...new Set(
+                            (breachDetailsByEmail[em.email_masked] ?? [])
+                              .flatMap(b => b.data_classes ?? [])
+                          )];
+                          if (!allClasses.length) return null;
+                          return (
+                            <div className="mb-4">
+                              <p className="text-xs text-gray-500 mb-1.5 font-medium">Dati esposti:</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {allClasses.map((cls, j) => (
+                                  <span key={j} className={`px-1.5 py-0.5 text-xs rounded border ${getDataClassColor(cls)}`}>
+                                    {cls}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         <div className="border-t border-corvin-200 pt-3">
                           <p className="text-xs font-bold text-blue-600 mb-2.5 uppercase tracking-wide">
