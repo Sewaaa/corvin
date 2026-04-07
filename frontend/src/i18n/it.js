@@ -11,7 +11,7 @@ export default {
 
   // Sidebar
   'nav.dashboard': 'Dashboard',
-  'nav.breach': 'Breach Monitor',
+  'nav.breach': 'Monitoraggio Violazioni',
   'nav.domain': 'Reputazione Domini',
   'nav.webScan': 'Scanner Web',
   'nav.email': 'Protezione Email',
@@ -66,7 +66,7 @@ export default {
   'dash.quickScanError': 'Alcuni moduli non raggiungibili',
 
   // Dashboard module cards
-  'dash.mod.breach': 'Breach Monitor',
+  'dash.mod.breach': 'Monitoraggio Violazioni',
   'dash.mod.breachDesc': 'Verifica se le email aziendali sono comparse in data breach pubblici',
   'dash.mod.domain': 'Reputazione Domini',
   'dash.mod.domainDesc': 'Controlla la salute dei tuoi domini: DNS, SSL e blacklist',
@@ -80,7 +80,7 @@ export default {
   'dash.mod.notifDesc': 'Tutti gli alert generati dai moduli di monitoraggio',
 
   // Breach Monitor
-  'breach.title': 'Breach Monitor',
+  'breach.title': 'Monitoraggio Violazioni',
   'breach.subtitle': 'Verifica se le email aziendali sono comparse in data breach',
   'breach.placeholder': 'email@example.com',
   'breach.addBtn': 'Aggiungi e verifica',
