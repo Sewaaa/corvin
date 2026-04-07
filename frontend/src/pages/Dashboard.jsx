@@ -5,6 +5,7 @@ import SeverityBadge from '../components/SeverityBadge';
 import { useSettings } from '../context/SettingsContext';
 import { breach } from '../api/breach';
 import { domain } from '../api/domain';
+import { email as emailApi } from '../api/email';
 import { notifications } from '../api/notifications';
 import { sandbox } from '../api/sandbox';
 import { api } from '../api/client';
@@ -93,14 +94,39 @@ function RecentActivity({ items, t }) {
   );
 }
 
+const loadStats = async (set) => {
+  const [summary, notifFeed, b, d, n, s] = await Promise.allSettled([
+    api.get('/organizations/summary'),
+    api.get('/notifications/?limit=8'),
+    breach.list(),
+    domain.list(),
+    notifications.list('?limit=1&is_read=false'),
+    sandbox.list('?status=malicious&limit=1'),
+  ]);
+  return { summary, notifFeed, b, d, n, s };
+};
+
 export default function Dashboard() {
   const { t } = useSettings();
   const [stats, setStats] = useState({ emails: 0, domains: 0, unread: 0, threats: 0 });
   const [apiOk, setApiOk] = useState(null);
   const [riskScore, setRiskScore] = useState(null);
   const [recentNotifs, setRecentNotifs] = useState([]);
+  const [scanning, setScanning] = useState(false);
+  const [scanDone, setScanDone] = useState(null);
 
   const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
+
+  const applyStats = ({ summary, notifFeed, b, d, n, s }) => {
+    if (summary.status === 'fulfilled') setRiskScore(summary.value?.risk_score ?? 0);
+    if (notifFeed.status === 'fulfilled') setRecentNotifs(notifFeed.value?.items ?? []);
+    setStats({
+      emails: b.status === 'fulfilled' ? (b.value?.length ?? 0) : 0,
+      domains: d.status === 'fulfilled' ? (d.value?.length ?? 0) : 0,
+      unread: n.status === 'fulfilled' ? (n.value?.total ?? 0) : 0,
+      threats: s.status === 'fulfilled' ? (s.value?.length ?? 0) : 0,
+    });
+  };
 
   useEffect(() => {
     fetch(`${API_BASE}/health`)
@@ -108,46 +134,93 @@ export default function Dashboard() {
       .then((d) => setApiOk(d.status === 'ok' || d.status === 'healthy'))
       .catch(() => setApiOk(false));
 
-    api.get('/organizations/summary')
-      .then((s) => setRiskScore(s?.risk_score ?? 0))
-      .catch(() => setRiskScore(0));
-
-    api.get('/notifications/?limit=8')
-      .then((data) => setRecentNotifs(data?.items ?? []))
-      .catch(() => {});
-
-    Promise.allSettled([
-      breach.list(),
-      domain.list(),
-      notifications.list('?limit=1&is_read=false'),
-      sandbox.list('?status=malicious&limit=1'),
-    ]).then(([b, d, n, s]) => {
-      setStats({
-        emails: b.status === 'fulfilled' ? (b.value?.length ?? 0) : 0,
-        domains: d.status === 'fulfilled' ? (d.value?.length ?? 0) : 0,
-        unread: n.status === 'fulfilled' ? (n.value?.total ?? 0) : 0,
-        threats: s.status === 'fulfilled' ? (s.value?.length ?? 0) : 0,
-      });
-    });
+    loadStats().then(applyStats);
   }, []);
+
+  const handleQuickScan = async () => {
+    setScanning(true);
+    setScanDone(null);
+    try {
+      const [emailList, domainList, accountList] = await Promise.all([
+        breach.list(),
+        domain.list(),
+        emailApi.listAccounts(),
+      ]);
+
+      const jobs = [];
+      if (emailList?.length) {
+        jobs.push(breach.checkAll(emailList.map((e) => e.email)));
+      }
+      (domainList ?? []).filter((d) => d.is_verified).forEach((d) => jobs.push(domain.scan(d.id)));
+      (accountList ?? []).forEach((a) => jobs.push(emailApi.triggerScan(a.id)));
+
+      await Promise.allSettled(jobs);
+      await new Promise((r) => setTimeout(r, 3500));
+
+      const results = await loadStats();
+      applyStats(results);
+      setScanDone({ ok: true, count: jobs.length });
+    } catch {
+      setScanDone({ ok: false });
+    } finally {
+      setScanning(false);
+    }
+  };
 
   return (
     <div>
+      {/* Banner errore API */}
+      {apiOk === false && (
+        <div className="flex items-center gap-2.5 mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 8v4M12 16h.01" />
+          </svg>
+          {t('dash.api.offline')}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t('dash.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('dash.subtitle')}</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-corvin-200 shadow-card text-sm">
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-            apiOk === null ? 'bg-amber-400 animate-pulse' : apiOk ? 'bg-green-500' : 'bg-red-500'
-          }`} />
-          <span className="text-gray-600">
-            {apiOk === null ? t('dash.api.checking') : apiOk ? t('dash.api.online') : t('dash.api.offline')}
-          </span>
-        </div>
+        <button
+          onClick={handleQuickScan}
+          disabled={scanning}
+          className="btn-primary flex items-center gap-2"
+        >
+          {scanning ? (
+            <>
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              {t('dash.quickScanning')}
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {t('dash.quickScan')}
+            </>
+          )}
+        </button>
       </div>
+
+      {/* Feedback scansione */}
+      {scanDone && (
+        <div className={`flex items-center gap-2 mb-6 px-4 py-3 rounded-xl border text-sm ${
+          scanDone.ok
+            ? 'bg-green-50 border-green-200 text-green-700'
+            : 'bg-red-50 border-red-200 text-red-700'
+        }`}>
+          {scanDone.ok
+            ? t('dash.quickScanDone', { count: scanDone.count })
+            : t('dash.quickScanError')}
+        </div>
+      )}
 
       {/* Risk score + Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">

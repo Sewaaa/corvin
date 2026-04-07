@@ -12,10 +12,10 @@ export default {
   // Sidebar
   'nav.dashboard': 'Dashboard',
   'nav.breach': 'Breach Monitor',
-  'nav.domain': 'Domain Reputation',
-  'nav.webScan': 'Web Scanner',
-  'nav.email': 'Email Protection',
-  'nav.sandbox': 'File Sandbox',
+  'nav.domain': 'Reputazione Domini',
+  'nav.webScan': 'Scanner Web',
+  'nav.email': 'Protezione Email',
+  'nav.sandbox': 'Sandbox File',
   'nav.notifications': 'Notifiche',
   'nav.reports': 'Report',
   'nav.settings': 'Impostazioni',
@@ -59,18 +59,22 @@ export default {
   'dash.modules': 'Moduli disponibili',
   'dash.api.checking': 'Sistema in verifica',
   'dash.api.online': 'Sistema operativo',
-  'dash.api.offline': 'Sistema non raggiungibile',
+  'dash.api.offline': 'Sistema non raggiungibile — alcune funzionalità potrebbero non essere disponibili',
+  'dash.quickScan': 'Aggiorna tutto',
+  'dash.quickScanning': 'Scansione in corso\u2026',
+  'dash.quickScanDone': 'Aggiornato — {count} moduli avviati',
+  'dash.quickScanError': 'Alcuni moduli non raggiungibili',
 
   // Dashboard module cards
   'dash.mod.breach': 'Breach Monitor',
   'dash.mod.breachDesc': 'Verifica se le email aziendali sono comparse in data breach pubblici',
-  'dash.mod.domain': 'Domain Reputation',
+  'dash.mod.domain': 'Reputazione Domini',
   'dash.mod.domainDesc': 'Controlla la salute dei tuoi domini: DNS, SSL e blacklist',
-  'dash.mod.webScan': 'Web Scanner',
+  'dash.mod.webScan': 'Scanner Web',
   'dash.mod.webScanDesc': 'Scansione passiva del sito per trovare configurazioni non sicure',
-  'dash.mod.email': 'Email Protection',
+  'dash.mod.email': 'Protezione Email',
   'dash.mod.emailDesc': 'Analisi delle email per phishing, spoofing e allegati pericolosi',
-  'dash.mod.sandbox': 'File Sandbox',
+  'dash.mod.sandbox': 'Sandbox File',
   'dash.mod.sandboxDesc': 'Carica file per analizzarli alla ricerca di virus e malware',
   'dash.mod.notif': 'Notifiche',
   'dash.mod.notifDesc': 'Tutti gli alert generati dai moduli di monitoraggio',
@@ -105,7 +109,7 @@ export default {
   'breach.action6': 'Considera l\'uso di un password manager per generare password uniche.',
 
   // Domain Reputation
-  'domain.title': 'Domain Reputation',
+  'domain.title': 'Reputazione Domini',
   'domain.subtitle': 'Analisi DNS, blacklist, certificato SSL e WHOIS',
   'domain.placeholder': 'example.com',
   'domain.addBtn': '+ Aggiungi',
@@ -124,7 +128,7 @@ export default {
   'domain.genericError': 'Si \u00e8 verificato un errore. Riprova pi\u00f9 tardi.',
 
   // Web Scanner
-  'scan.title': 'Web Scanner',
+  'scan.title': 'Scanner Web',
   'scan.subtitle': 'Scansione passiva \u2014 max 20 richieste, nessun payload intrusivo',
   'scan.selectDomain': 'Seleziona un dominio verificato\u2026',
   'scan.freqManual': 'Una tantum',
@@ -150,7 +154,7 @@ export default {
   'scan.freqBadge.monthly': 'mensile',
 
   // Email Protection
-  'email.title': 'Email Protection',
+  'email.title': 'Protezione Email',
   'email.subtitle': 'Analisi IMAP per phishing, spoofing e anomalie SPF/DKIM/DMARC',
   'email.addBtn': '+ Aggiungi account',
   'email.cancelBtn': '\u2715 Annulla',
@@ -189,7 +193,7 @@ export default {
   'email.release': 'Rilascia',
 
   // File Sandbox
-  'sandbox.title': 'File Sandbox',
+  'sandbox.title': 'Sandbox File',
   'sandbox.subtitle': 'Analisi statica: YARA, VirusTotal hash, entropia, PE parsing',
   'sandbox.dropHint': 'Trascina un file qui, oppure <span class="text-blue-600 font-medium">clicca per selezionare</span>',
   'sandbox.dropSub': 'Max 10 MB \u00b7 YARA + VirusTotal hash lookup',
