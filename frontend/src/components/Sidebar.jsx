@@ -85,14 +85,14 @@ export default function Sidebar({ unreadCount = 0, onClose = () => {} }) {
         <button
           onClick={toggleTheme}
           className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-white/45 hover:text-white hover:bg-white/8 rounded-lg transition-colors"
-          title={theme === 'light' ? t('theme.dark') : t('theme.light')}
+          title={theme === 'dark' ? t('theme.dark') : t('theme.light')}
         >
-          {theme === 'light' ? (
+          {theme === 'dark' ? (
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
           ) : (
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></svg>
           )}
-          {theme === 'light' ? t('theme.dark') : t('theme.light')}
+          {theme === 'dark' ? t('theme.dark') : t('theme.light')}
         </button>
       </div>
 

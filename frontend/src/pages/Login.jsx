@@ -187,7 +187,7 @@ export default function Login() {
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <MockDashboard />
         {/* Dark overlay + blur */}
-        <div className="absolute inset-0 backdrop-blur-sm bg-gray-900/40" />
+        <div className="absolute inset-0 backdrop-blur-md bg-gray-900/65" />
       </div>
 
       {/* ── Login card ── */}
