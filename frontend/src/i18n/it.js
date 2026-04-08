@@ -19,12 +19,13 @@ export default {
   'nav.notifications': 'Notifiche',
   'nav.reports': 'Report',
   'nav.settings': 'Impostazioni',
-  'nav.platform': 'Security Platform',
+  'nav.platform': 'Threat Intelligence',
   'nav.logout': 'Disconnetti \u2192',
 
   // Login
   'login.title': 'Corvin',
   'login.subtitle': 'La sicurezza della tua azienda, semplice.',
+  'login.badge': 'Accedi per sbloccare la dashboard',
   'login.tab.login': 'Accedi',
   'login.tab.register': 'Registrati',
   'login.fullName': 'Nome completo',

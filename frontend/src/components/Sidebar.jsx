@@ -24,22 +24,20 @@ export default function Sidebar({ unreadCount = 0 }) {
   return (
     <aside className="w-60 h-full bg-corvin-nav flex flex-col flex-shrink-0">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/10">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-white" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z" />
-            </svg>
+      <div className="px-5 py-5 border-b border-white/8">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-violet-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-900/40">
+            <RavenIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <span className="text-base font-bold text-white tracking-tight">Corvin</span>
-            <p className="text-xs text-white/40 leading-none mt-0.5">{t('nav.platform')}</p>
+            <span className="text-[15px] font-bold text-white tracking-tight">Corvin</span>
+            <p className="text-[10px] text-white/35 leading-none mt-0.5 uppercase tracking-widest">{t('nav.platform')}</p>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
           <NavLink
             key={to}
@@ -48,8 +46,8 @@ export default function Sidebar({ unreadCount = 0 }) {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                 isActive
-                  ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                  : 'text-white/65 hover:text-white hover:bg-white/10'
+                  ? 'bg-violet-700 text-white font-semibold shadow-sm shadow-violet-900/50'
+                  : 'text-white/55 hover:text-white hover:bg-white/8'
               }`
             }
           >
@@ -65,10 +63,10 @@ export default function Sidebar({ unreadCount = 0 }) {
       </nav>
 
       {/* Lang / Theme toggles */}
-      <div className="px-3 py-2 border-t border-white/10 flex gap-2">
+      <div className="px-2.5 py-2 border-t border-white/8 flex gap-1.5">
         <button
           onClick={toggleLang}
-          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-white/45 hover:text-white hover:bg-white/8 rounded-lg transition-colors"
           title={lang === 'it' ? 'Switch to English' : 'Passa a Italiano'}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" /></svg>
@@ -76,7 +74,7 @@ export default function Sidebar({ unreadCount = 0 }) {
         </button>
         <button
           onClick={toggleTheme}
-          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-white/45 hover:text-white hover:bg-white/8 rounded-lg transition-colors"
           title={theme === 'light' ? t('theme.dark') : t('theme.light')}
         >
           {theme === 'light' ? (
@@ -89,24 +87,37 @@ export default function Sidebar({ unreadCount = 0 }) {
       </div>
 
       {/* User */}
-      <div className="px-3 py-3 border-t border-white/10">
+      <div className="px-2.5 py-3 border-t border-white/8">
         <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors">
-          <div className="w-7 h-7 rounded-full bg-blue-600/80 flex items-center justify-center text-xs text-white font-semibold flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-violet-700/70 flex items-center justify-center text-xs text-white font-semibold flex-shrink-0">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs text-white font-medium truncate">{user?.full_name}</p>
-            <p className="text-xs text-white/40 truncate">{user?.email}</p>
+            <p className="text-xs text-white/35 truncate">{user?.email}</p>
           </div>
         </div>
         <button
           onClick={logout}
-          className="w-full mt-1 text-xs text-white/40 hover:text-white/80 transition-colors py-1.5 text-left px-2"
+          className="w-full mt-1 text-xs text-white/35 hover:text-white/70 transition-colors py-1.5 text-left px-2"
         >
           {t('nav.logout')}
         </button>
       </div>
     </aside>
+  );
+}
+
+// ── Raven logo mark ───────────────────────────────────────────────────────────
+// Stylized raven in profile: body curves up from tail (left) to crown,
+// beak projects to the right, watchful eye below crown.
+
+function RavenIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path d="M3 17 C2 13 3 8 6 6 C8 4 11 3.5 13.5 4 C16 4.5 18 6 18 8.5 L20 7 L19 10.5 C20 12 18.5 14 16.5 13.5 C17 16 14.5 18 12 17.5 L3 17 Z" />
+      <circle cx="15.5" cy="7.5" r="1.1" fill="white" opacity="0.85" />
+    </svg>
   );
 }
 

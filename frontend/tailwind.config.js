@@ -5,16 +5,16 @@ export default {
     extend: {
       colors: {
         corvin: {
-          50:  '#f7f8fc',
-          100: '#eef0f7',
-          200: '#dde1ef',
-          300: '#bcc3d9',
-          nav: '#1e2235',
-          'nav-hover': '#2a3050',
-          'nav-active': '#2563eb',
-          accent: '#2563eb',
-          'accent-light': '#3b82f6',
-          'accent-dark': '#1d4ed8',
+          50:  '#F7F7FD',
+          100: '#EEEDF9',
+          200: '#D9D7F4',
+          300: '#BDB9EC',
+          nav: '#0B0D16',
+          'nav-hover': '#161929',
+          'nav-active': '#7C3AED',
+          accent: '#7C3AED',
+          'accent-light': '#8B5CF6',
+          'accent-dark': '#6D28D9',
         },
       },
       fontFamily: {

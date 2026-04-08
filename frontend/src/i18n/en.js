@@ -17,11 +17,12 @@ export default {
   'nav.notifications': 'Notifications',
   'nav.reports': 'Reports',
   'nav.settings': 'Settings',
-  'nav.platform': 'Security Platform',
+  'nav.platform': 'Threat Intelligence',
   'nav.logout': 'Sign out \u2192',
 
   'login.title': 'Corvin',
   'login.subtitle': 'Your business security, simplified.',
+  'login.badge': 'Sign in to unlock the dashboard',
   'login.tab.login': 'Sign in',
   'login.tab.register': 'Sign up',
   'login.fullName': 'Full name',

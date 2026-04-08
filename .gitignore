@@ -79,3 +79,6 @@ celerybeat.pid
 *.bak
 *.tmp
 .cache/
+
+# Credentials — local notes, never commit
+accounts.txt
