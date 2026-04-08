@@ -15,7 +15,7 @@ export default function InfoModal({ open, onClose, title, sections = [] }) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl border border-corvin-200">
+      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[92dvh] sm:max-h-[85vh] flex flex-col shadow-2xl border border-corvin-200">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-corvin-200">
           <div className="flex items-center gap-2.5">

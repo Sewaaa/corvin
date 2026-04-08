@@ -180,7 +180,7 @@ export default function Dashboard() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-6 md:mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t('dash.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('dash.subtitle')}</p>
@@ -223,7 +223,7 @@ export default function Dashboard() {
       )}
 
       {/* Risk score + Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6 md:mb-8">
         <div className="lg:col-span-1">
           {riskScore !== null ? (
             <RiskGauge score={riskScore} t={t} />

@@ -120,8 +120,8 @@ function UsersTab() {
         <div className="space-y-2">
           {userList.map((u) => (
             <div key={u.id} className={`bg-white rounded-xl shadow-card border border-corvin-200 px-4 py-3 ${!u.is_active ? 'opacity-50' : ''}`}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs text-blue-700 font-bold flex-shrink-0">
                     {u.full_name?.charAt(0)?.toUpperCase() ?? '?'}
                   </div>
@@ -135,7 +135,7 @@ function UsersTab() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
                   <span className={`px-2 py-0.5 text-xs rounded-full border font-semibold ${ROLE_COLORS[u.role] ?? ROLE_COLORS.viewer}`}>
                     {ROLE_LABELS[u.role] ?? u.role}
                   </span>

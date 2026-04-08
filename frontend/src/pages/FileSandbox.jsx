@@ -152,7 +152,7 @@ export default function FileSandbox() {
     <div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="File Sandbox — Guida" sections={INFO_SECTIONS} />
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t('sandbox.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('sandbox.subtitle')}</p>
@@ -193,7 +193,7 @@ export default function FileSandbox() {
                   <span className="text-xs text-gray-400">{formatSize(f.file_size)}</span>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-xs text-gray-400">{new Date(f.created_at).toLocaleString('it-IT')}</span>
+                  <span className="text-xs text-gray-400 hidden sm:inline">{new Date(f.created_at).toLocaleString('it-IT')}</span>
                   <button
                     onClick={(e) => handleRemove(e, f.id)}
                     disabled={removingId === f.id}
@@ -206,7 +206,7 @@ export default function FileSandbox() {
 
               {detail?.id === f.id && (
                 <div className="border-t border-corvin-100 px-4 py-3 space-y-3">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-gray-500 font-medium">{t('sandbox.sha256')} </span>
                       <code className="text-gray-700 break-all">{detail.sha256_hash}</code>

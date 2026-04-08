@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { to: '/settings',       labelKey: 'nav.settings',        icon: GearIcon },
 ];
 
-export default function Sidebar({ unreadCount = 0 }) {
+export default function Sidebar({ unreadCount = 0, onClose = () => {} }) {
   const { user, logout } = useAuth();
   const { t, lang, theme, toggleLang, toggleTheme } = useSettings();
   const initials = user?.full_name
@@ -29,10 +29,20 @@ export default function Sidebar({ unreadCount = 0 }) {
           <div className="w-8 h-8 rounded-xl bg-violet-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-900/40">
             <RavenIcon className="w-5 h-5 text-white" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <span className="text-[15px] font-bold text-white tracking-tight">Corvin</span>
             <p className="text-[10px] text-white/35 leading-none mt-0.5 uppercase tracking-widest">{t('nav.platform')}</p>
           </div>
+          {/* Close button — mobile only */}
+          <button
+            onClick={onClose}
+            className="lg:hidden text-white/40 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
+            aria-label="Chiudi menu"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       </div>
 

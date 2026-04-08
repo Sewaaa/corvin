@@ -128,7 +128,7 @@ export default function WebScanner() {
     <div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="Web Scanner — Guida" sections={INFO_SECTIONS} />
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t('scan.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('scan.subtitle')}</p>
@@ -207,7 +207,7 @@ export default function WebScanner() {
 
               {isOpen(s.id) && (
                 <div className="border-t border-corvin-100 px-4 py-3">
-                  <div className="flex gap-4 mb-3 text-xs">
+                  <div className="flex flex-wrap gap-3 mb-3 text-xs">
                     {['critical', 'high', 'medium', 'low', 'info'].map((sev) => (
                       <span key={sev} className="text-gray-500">
                         <span className="text-gray-900 font-semibold">{detail.summary?.[sev] ?? 0}</span> {sev}

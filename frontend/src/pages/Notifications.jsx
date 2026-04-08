@@ -96,7 +96,7 @@ export default function Notifications() {
     <div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="Notifications — Guida" sections={INFO_SECTIONS} />
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t('notif.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('notif.subtitle')}</p>
@@ -215,21 +215,22 @@ export default function Notifications() {
           )}
           {!loadingW && webhooks?.length > 0 && (
             <div className="bg-white rounded-xl shadow-card border border-corvin-200 overflow-hidden">
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[440px]">
                 <thead>
                   <tr className="border-b border-corvin-200 bg-corvin-50">
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('notif.whUrl')}</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('notif.whEvents')}</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('notif.whStatus')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{t('notif.whEvents')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{t('notif.whStatus')}</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {webhooks.map((w) => (
                     <tr key={w.id} className="border-b border-corvin-100 hover:bg-corvin-50 transition-colors">
-                      <td className="px-4 py-3 text-gray-900 font-mono text-xs truncate max-w-xs">{w.url}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{w.events?.join(', ')}</td>
-                      <td className="px-4 py-3"><SeverityBadge value={w.is_active ? 'active' : 'inactive'} /></td>
+                      <td className="px-4 py-3 text-gray-900 font-mono text-xs truncate max-w-[160px] sm:max-w-xs">{w.url}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs hidden sm:table-cell">{w.events?.join(', ')}</td>
+                      <td className="px-4 py-3 hidden sm:table-cell"><SeverityBadge value={w.is_active ? 'active' : 'inactive'} /></td>
                       <td className="px-4 py-3">
                         <div className="flex gap-3 justify-end">
                           <button onClick={() => handleTestWebhook(w.id)} className="text-xs text-blue-600 hover:underline font-medium">{t('notif.whTest')}</button>
@@ -240,6 +241,7 @@ export default function Notifications() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

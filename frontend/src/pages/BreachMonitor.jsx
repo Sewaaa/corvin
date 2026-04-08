@@ -132,7 +132,7 @@ export default function BreachMonitor() {
     <div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="Breach Monitor — Guida" sections={INFO_SECTIONS} />
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t('breach.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('breach.subtitle')}</p>
@@ -180,11 +180,12 @@ export default function BreachMonitor() {
 
       {!loading && emails?.length > 0 && (
         <div className="bg-white rounded-xl shadow-card border border-corvin-200 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[480px]">
             <thead>
               <tr className="border-b border-corvin-200 bg-corvin-50">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('breach.thEmail')}</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('breach.thLastCheck')}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{t('breach.thLastCheck')}</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('breach.thStatus')}</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -197,8 +198,8 @@ export default function BreachMonitor() {
                     className="border-b border-corvin-100 hover:bg-corvin-50 cursor-pointer transition-colors"
                     onClick={() => toggleExpand(em.id)}
                   >
-                    <td className="px-4 py-3 text-gray-900 font-medium">{em.email_masked}</td>
-                    <td className="px-4 py-3 text-gray-500">
+                    <td className="px-4 py-3 text-gray-900 font-medium max-w-[160px] truncate">{em.email_masked}</td>
+                    <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
                       {em.last_checked ? new Date(em.last_checked).toLocaleDateString('it-IT') : '—'}
                     </td>
                     <td className="px-4 py-3">
@@ -207,7 +208,7 @@ export default function BreachMonitor() {
                     <td className="px-4 py-3">
                       <div className="flex gap-3 justify-end items-center">
                         {em.breach_count > 0 && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-400 hidden sm:inline">
                             {expandedId === em.id ? t('breach.hide') : t('breach.details')}
                           </span>
                         )}
@@ -222,7 +223,7 @@ export default function BreachMonitor() {
                   </tr>
                   {expandedId === em.id && em.breach_count > 0 && (
                     <tr key={`${em.id}-detail`} className="bg-corvin-50 border-b border-corvin-100">
-                      <td colSpan={4} className="px-6 py-4">
+                      <td colSpan={4} className="px-4 sm:px-6 py-4">
                         <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">
                           {t('breach.detected')} ({em.breach_count})
                         </p>
@@ -282,6 +283,7 @@ export default function BreachMonitor() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

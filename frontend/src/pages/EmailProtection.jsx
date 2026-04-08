@@ -278,7 +278,7 @@ export default function EmailProtection() {
     <div>
       <InfoModal open={showInfo} onClose={() => setShowInfo(false)} title="Email Protection — Guida" sections={INFO_SECTIONS} />
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t('email.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('email.subtitle')}</p>
