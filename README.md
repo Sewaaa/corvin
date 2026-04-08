@@ -4,6 +4,10 @@
 
 > **Guardiano silenzioso del tuo perimetro digitale.**
 
+🔗 **[Demo live → corvin.onrender.com](https://corvin.onrender.com)**
+
+> Il backend gira su Render free tier — se è la prima visita dopo un periodo di inattività, attendere 20-30 secondi al caricamento iniziale.
+
 Corvin è una piattaforma SaaS di cybersecurity per PMI che centralizza il monitoraggio di minacce email, data breach, reputazione domini, vulnerabilità web e file sospetti — tutto da un'unica dashboard.
 
 Progetto portfolio full-stack costruito come dimostrazione di competenze in sicurezza informatica, architettura SaaS multi-tenant e sviluppo web moderno.
@@ -256,7 +260,7 @@ Per `REDIS_URL` gratuito: registrati su https://upstash.com e crea un database R
 
 ### 5. Configura il frontend
 
-Per il servizio `corvin-frontend` aggiungi:
+Per il servizio `corvin` aggiungi:
 
 | Variabile | Valore |
 |-----------|--------|

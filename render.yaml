@@ -57,7 +57,7 @@ services:
 
   # ── Frontend Static Site ─────────────────────────────────────────────────────
   - type: web
-    name: corvin-frontend
+    name: corvin
     runtime: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
