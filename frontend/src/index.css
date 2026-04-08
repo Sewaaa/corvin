@@ -79,6 +79,14 @@
 /* Dark theme sidebar */
 [data-theme="dark"] .bg-corvin-nav { background-color: #070810 !important; }
 
+/* ─── Force light mode on login card (neutralizza override dark theme) ─── */
+[data-force-light] .form-input {
+  background-color: white !important;
+  border-color: #D9D7F4 !important;
+  color: #111827 !important;
+}
+[data-force-light] .form-input::placeholder { color: #9ca3af !important; }
+
 /* Dark theme color patches for badges/severity that should stay colorful */
 [data-theme="dark"] .bg-gray-100 { background-color: #2d2f45 !important; }
 [data-theme="dark"] .bg-gray-200 { background-color: #3a3d55 !important; }

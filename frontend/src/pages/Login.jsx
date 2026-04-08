@@ -193,7 +193,8 @@ export default function Login() {
       {/* ── Login card ── */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4">
         {/* Badge above card */}
-        <div className="mb-4 flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs px-3 py-1.5 rounded-full shadow">
+        <div className="mb-4 flex items-center gap-2 text-white text-xs px-3.5 py-2 rounded-full"
+          style={{ backgroundColor: 'rgba(0,0,0,0.50)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.18)' }}>
           <RavenIcon className="w-3.5 h-3.5" />
           {t('login.badge') || 'Accedi per sbloccare la dashboard'}
         </div>
@@ -208,18 +209,22 @@ export default function Login() {
             <p className="text-white/70 text-sm mt-1">{t('login.subtitle')}</p>
           </div>
 
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 p-6">
+          {/* data-force-light: neutralizza gli override dark-mode per form-input */}
+          <div
+            data-force-light
+            className="rounded-2xl shadow-2xl p-6"
+            style={{ backgroundColor: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.35)' }}
+          >
             {/* Toggle */}
-            <div className="flex mb-6 bg-corvin-100 rounded-xl p-1 gap-1">
+            <div className="flex mb-6 rounded-xl p-1 gap-1" style={{ backgroundColor: '#EEEDF9' }}>
               {['login', 'register'].map((m) => (
                 <button
                   key={m}
                   onClick={() => { setMode(m); setError(''); }}
-                  className={`flex-1 py-2 text-sm rounded-lg font-medium transition-all ${
-                    mode === m
-                      ? 'bg-white text-gray-900 shadow-card'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                  className="flex-1 py-2 text-sm rounded-lg font-medium transition-all"
+                  style={mode === m
+                    ? { backgroundColor: 'white', color: '#111827', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+                    : { color: '#6b7280' }}
                 >
                   {t(`login.tab.${m}`)}
                 </button>
@@ -269,13 +274,14 @@ export default function Login() {
 function Field({ label, type = 'text', value, onChange, required }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium mb-1.5" style={{ color: '#374151' }}>{label}</label>
       <input
         type={type}
         value={value}
         onChange={onChange}
         required={required}
         className="form-input"
+        style={{ backgroundColor: 'white', color: '#111827', borderColor: '#D9D7F4' }}
       />
     </div>
   );
