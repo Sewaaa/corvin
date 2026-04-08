@@ -114,9 +114,33 @@ export default function Sidebar({ unreadCount = 0 }) {
 
 function RavenIcon({ className }) {
   return (
-    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path d="M3 17 C2 13 3 8 6 6 C8 4 11 3.5 13.5 4 C16 4.5 18 6 18 8.5 L20 7 L19 10.5 C20 12 18.5 14 16.5 13.5 C17 16 14.5 18 12 17.5 L3 17 Z" />
-      <circle cx="15.5" cy="7.5" r="1.1" fill="white" opacity="0.85" />
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      {/*
+        Raven head in profile, beak facing right.
+        fill-rule="evenodd" makes the eye circle a transparent hole.
+        Outer path: body/head silhouette (clockwise)
+        Inner path: eye circle (creates hole via evenodd)
+      */}
+      <path
+        fillRule="evenodd"
+        d="
+          M 5 20
+          C 3.5 16 3.5 10 5.5 7
+          C 7 5 9.5 3.5 12.5 3.5
+          C 15.5 3.5 17.5 5 18.5 6.5
+          L 22 9
+          C 22.5 10 22 11.2 21 11
+          L 18.5 10
+          C 17.5 10.5 16.5 12 15.5 14
+          C 14 17 12 19.5 9.5 21
+          L 7.5 21.5
+          L 6 20.5
+          Z
+          M 16.2 7
+          a 1.25 1.25 0 1 0 -2.5 0
+          a 1.25 1.25 0 1 0 2.5 0
+        "
+      />
     </svg>
   );
 }
