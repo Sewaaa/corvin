@@ -50,7 +50,10 @@ async function request(method, path, body = null, isRetry = false) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail ?? `API error: ${res.status}`);
+    const detail = Array.isArray(err.detail)
+      ? err.detail.map((e) => e.msg).join(', ')
+      : (err.detail ?? `API error: ${res.status}`);
+    throw new Error(detail);
   }
 
   return res.json();
