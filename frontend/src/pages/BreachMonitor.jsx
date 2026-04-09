@@ -236,9 +236,9 @@ export default function BreachMonitor() {
                         </p>
                         {/* Breach names — compact badges */}
                         <div className="flex flex-wrap gap-2 mb-3">
-                          {(breachDetailsByEmail[em.email_masked] ?? em.breach_names.map(n => ({ breach_name: n, data_classes: [] }))).map((b, i) => (
+                          {(em.breach_names ?? []).map((name, i) => (
                             <span key={i} className="px-2 py-0.5 text-xs rounded bg-red-50 border border-red-200 text-red-600 font-medium">
-                              {b.breach_name}
+                              {name}
                             </span>
                           ))}
                         </div>
