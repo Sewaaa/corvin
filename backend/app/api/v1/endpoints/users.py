@@ -5,6 +5,7 @@ All operations are scoped to the current organization.
 Admins can invite new users, list members, change roles, and deactivate accounts.
 Viewers and Analysts cannot access these endpoints.
 """
+import asyncio
 import uuid
 from typing import List
 
@@ -14,11 +15,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import audit
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_active_user, get_current_org, require_admin
 from app.core.security import hash_password
 from app.models.organization import Organization
 from app.models.user import User, UserRole
+from app.modules.notifications.service import build_invite_email_html, send_smtp_email
 from app.schemas.users import (
     UserInvite,
     UserResponse,
@@ -55,8 +58,7 @@ async def invite_user(
 ) -> UserResponse:
     """
     Invite a new user to the organization (admin only).
-    Creates the account with a temporary password that must be changed on first login.
-    In production this would send an email invite — here we return the user object.
+    Creates the account with a temporary password and sends a branded invite email.
     """
     # Check email not already taken (across all orgs — emails are unique globally)
     existing = await db.execute(select(User).where(User.email == payload.email.lower()))
@@ -88,6 +90,25 @@ async def invite_user(
         ip_address=request.client.host if request.client else None,
         details={"invited_role": payload.role.value},
     )
+
+    # Send branded invite email (fire-and-forget — non-blocking)
+    try:
+        invite_html = build_invite_email_html(
+            full_name=payload.full_name,
+            org_name=current_org.name,
+            email=payload.email.lower(),
+            temp_password=payload.temporary_password,
+            login_url=settings.frontend_url,
+        )
+        asyncio.create_task(
+            send_smtp_email(
+                to_address=payload.email.lower(),
+                subject=f"Sei stato invitato su Corvin — {current_org.name}",
+                body_html=invite_html,
+            )
+        )
+    except Exception as exc:
+        logger.warning("invite_email_failed", error=str(exc))
 
     logger.info("user_invited", org_id=str(current_org.id), role=payload.role.value)
     return UserResponse.model_validate(new_user)

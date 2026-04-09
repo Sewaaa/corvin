@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
+    frontend_url: str = "https://corvin-frontend.onrender.com"
 
     # File upload
     max_upload_size_mb: int = 10

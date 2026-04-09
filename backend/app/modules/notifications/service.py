@@ -143,6 +143,109 @@ async def send_smtp_email(to_address: str, subject: str, body_html: str) -> bool
     return await asyncio.to_thread(_send_smtp_sync, to_address, subject, body_html)
 
 
+def build_invite_email_html(
+    full_name: str,
+    org_name: str,
+    email: str,
+    temp_password: str,
+    login_url: str,
+) -> str:
+    """
+    Email di invito branded Corvin con logo, credenziali temporanee e link di accesso.
+    """
+    raven_svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" '
+        'viewBox="0 0 24 24" fill="white" aria-hidden="true">'
+        '<path fill-rule="evenodd" d="'
+        "M 5 20 C 3.5 16 3.5 10 5.5 7 C 7 5 9.5 3.5 12.5 3.5 "
+        "C 15.5 3.5 17.5 5 18.5 6.5 L 22 9 C 22.5 10 22 11.2 21 11 "
+        "L 18.5 10 C 17.5 10.5 16.5 12 15.5 14 C 14 17 12 19.5 9.5 21 "
+        "L 7.5 21.5 L 6 20.5 Z "
+        "M 16.2 7 a 1.25 1.25 0 1 0 -2.5 0 a 1.25 1.25 0 1 0 2.5 0"
+        '"/></svg>'
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:560px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- Header violet -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#7C3AED 0%,#6D28D9 100%);padding:36px 40px;text-align:center;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:14px;margin-bottom:16px;">
+              {raven_svg}
+            </div>
+            <h1 style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Corvin</h1>
+            <p style="margin:4px 0 0;font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;">Threat Intelligence Platform</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <h2 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#111827;">Benvenuto su Corvin, {full_name}!</h2>
+            <p style="margin:0 0 24px;font-size:15px;color:#4b5563;line-height:1.6;">
+              Sei stato invitato a unirti all'organizzazione <strong style="color:#111827;">{org_name}</strong> sulla piattaforma Corvin.<br>
+              Usa le credenziali qui sotto per accedere.
+            </p>
+
+            <!-- Credentials box -->
+            <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:20px 24px;margin-bottom:28px;">
+              <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:1px;">Le tue credenziali</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
+                <tr>
+                  <td style="padding:6px 0;font-size:13px;color:#6b7280;font-weight:500;width:110px;">Email</td>
+                  <td style="padding:6px 0;font-size:13px;color:#111827;font-weight:600;font-family:monospace;">{email}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;font-size:13px;color:#6b7280;font-weight:500;">Password</td>
+                  <td style="padding:6px 0;">
+                    <span style="font-size:14px;color:#7c3aed;font-weight:700;font-family:monospace;background:#ede9fe;padding:3px 10px;border-radius:6px;">{temp_password}</span>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- CTA button -->
+            <div style="text-align:center;margin-bottom:28px;">
+              <a href="{login_url}" style="display:inline-block;background:#7C3AED;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:13px 36px;border-radius:10px;letter-spacing:-0.1px;">
+                Accedi a Corvin →
+              </a>
+            </div>
+
+            <!-- Security note -->
+            <div style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:4px;">
+              <p style="margin:0;font-size:13px;color:#92400e;line-height:1.5;">
+                <strong>Importante:</strong> questa è una password temporanea. Ti consigliamo di cambiarla subito dopo il primo accesso nelle impostazioni del tuo profilo.
+              </p>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;border-top:1px solid #f3f4f6;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+              Hai ricevuto questa email perché un amministratore di <strong>{org_name}</strong> ti ha invitato.<br>
+              Se non ti aspettavi questo invito, puoi ignorare questa email.
+            </p>
+            <p style="margin:12px 0 0;font-size:11px;color:#d1d5db;">
+              Corvin Security Platform &mdash; Guardiano silenzioso del tuo perimetro digitale.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+
 def _build_email_html(notification: Notification) -> str:
     severity_colors = {
         "critical": "#dc2626",
