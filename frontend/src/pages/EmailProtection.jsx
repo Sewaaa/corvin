@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { email as emailApi } from '../api/email';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -137,7 +138,7 @@ function ThreatPanel({ emailAddress, onClose }) {
   );
 }
 
-function AccountCard({ account, onScan, onRemove, scanning, removing }) {
+function AccountCard({ account, onScan, onRemove, scanning, removing, isViewer }) {
   const { t } = useSettings();
   const [showThreats, setShowThreats] = useState(false);
 
@@ -183,21 +184,25 @@ function AccountCard({ account, onScan, onRemove, scanning, removing }) {
             </button>
           )}
 
-          <button
-            onClick={() => onScan(account.id)}
-            disabled={scanning}
-            className="px-3 py-1 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-colors"
-          >
-            {scanning ? t('email.scanning') : t('email.startScan')}
-          </button>
+          {!isViewer && (
+            <button
+              onClick={() => onScan(account.id)}
+              disabled={scanning}
+              className="px-3 py-1 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-colors"
+            >
+              {scanning ? t('email.scanning') : t('email.startScan')}
+            </button>
+          )}
 
-          <button
-            onClick={() => onRemove(account.id)}
-            disabled={removing}
-            className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
-          >
-            {removing ? '…' : '✕'}
-          </button>
+          {!isViewer && (
+            <button
+              onClick={() => onRemove(account.id)}
+              disabled={removing}
+              className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+            >
+              {removing ? '…' : '✕'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -210,6 +215,8 @@ function AccountCard({ account, onScan, onRemove, scanning, removing }) {
 
 export default function EmailProtection() {
   const { t } = useSettings();
+  const { user } = useAuth();
+  const isViewer = user?.role === 'viewer';
   const { data: accounts, loading, refetch } = useApi(() => emailApi.listAccounts());
   const [form, setForm] = useState({ email_address: '', imap_host: '', imap_port: 993, password: '', use_ssl: true });
   const [showForm, setShowForm] = useState(false);
@@ -291,11 +298,13 @@ export default function EmailProtection() {
 
       {pageError && <p className="text-red-600 text-sm mb-4">⚠ {pageError}</p>}
 
-      <div className="flex justify-end mb-4">
-        <button onClick={() => { setShowForm((v) => !v); setSaveError(''); }} className={showForm ? 'btn-secondary' : 'btn-primary'}>
-          {showForm ? t('email.cancelBtn') : t('email.addBtn')}
-        </button>
-      </div>
+      {!isViewer && (
+        <div className="flex justify-end mb-4">
+          <button onClick={() => { setShowForm((v) => !v); setSaveError(''); }} className={showForm ? 'btn-secondary' : 'btn-primary'}>
+            {showForm ? t('email.cancelBtn') : t('email.addBtn')}
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleAdd} className="bg-white rounded-xl shadow-card border border-corvin-200 p-4 mb-4 space-y-3">
@@ -338,6 +347,7 @@ export default function EmailProtection() {
               onRemove={handleRemove}
               scanning={scanningId === a.id}
               removing={removingId === a.id}
+              isViewer={isViewer}
             />
           ))}
         </div>

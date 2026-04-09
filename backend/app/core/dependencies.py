@@ -63,6 +63,19 @@ async def get_current_active_user(
     return current_user
 
 
+async def require_analyst(
+    current_user=Depends(get_current_active_user),
+):
+    """Require analyst or admin role. Viewers are blocked from write/action operations."""
+    from app.models.user import UserRole
+    if current_user.role == UserRole.VIEWER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Analyst or admin privileges required",
+        )
+    return current_user
+
+
 async def require_admin(
     current_user=Depends(get_current_active_user),
 ):

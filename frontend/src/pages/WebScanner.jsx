@@ -3,6 +3,7 @@ import { useApi } from '../hooks/useApi';
 import { webScan } from '../api/webScan';
 import { domain as domainApi } from '../api/domain';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -42,6 +43,8 @@ const INFO_SECTIONS = [
 
 export default function WebScanner() {
   const { t } = useSettings();
+  const { user } = useAuth();
+  const isViewer = user?.role === 'viewer';
   const { data: scans, loading, error, refetch } = useApi(() => webScan.list());
   const { data: domains } = useApi(() => domainApi.list());
   const [selectedDomain, setSelectedDomain] = useState('');
@@ -139,23 +142,25 @@ export default function WebScanner() {
         </button>
       </div>
 
-      <form onSubmit={handleStart} className="flex flex-wrap gap-3 mb-6">
-        <select value={selectedDomain} onChange={(e) => setSelectedDomain(e.target.value)} className="form-select flex-1 min-w-[200px]">
-          <option value="">{t('scan.selectDomain')}</option>
-          {verifiedDomains.map((d) => (
-            <option key={d.id} value={d.id}>{d.domain}</option>
-          ))}
-        </select>
-        <select value={frequency} onChange={(e) => setFrequency(e.target.value)} className="form-select">
-          <option value="manual">{t('scan.freqManual')}</option>
-          <option value="daily">{t('scan.freqDaily')}</option>
-          <option value="weekly">{t('scan.freqWeekly')}</option>
-          <option value="monthly">{t('scan.freqMonthly')}</option>
-        </select>
-        <button type="submit" disabled={starting || !selectedDomain} className="btn-primary">
-          {starting ? t('scan.starting') : t('scan.startBtn')}
-        </button>
-      </form>
+      {!isViewer && (
+        <form onSubmit={handleStart} className="flex flex-wrap gap-3 mb-6">
+          <select value={selectedDomain} onChange={(e) => setSelectedDomain(e.target.value)} className="form-select flex-1 min-w-[200px]">
+            <option value="">{t('scan.selectDomain')}</option>
+            {verifiedDomains.map((d) => (
+              <option key={d.id} value={d.id}>{d.domain}</option>
+            ))}
+          </select>
+          <select value={frequency} onChange={(e) => setFrequency(e.target.value)} className="form-select">
+            <option value="manual">{t('scan.freqManual')}</option>
+            <option value="daily">{t('scan.freqDaily')}</option>
+            <option value="weekly">{t('scan.freqWeekly')}</option>
+            <option value="monthly">{t('scan.freqMonthly')}</option>
+          </select>
+          <button type="submit" disabled={starting || !selectedDomain} className="btn-primary">
+            {starting ? t('scan.starting') : t('scan.startBtn')}
+          </button>
+        </form>
+      )}
 
       {startError && <p className="text-red-600 text-sm mb-4">{startError}</p>}
       {detailError && <p className="text-red-600 text-sm mb-4">⚠ {detailError}</p>}
@@ -193,15 +198,17 @@ export default function WebScanner() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0 ml-3">
                   <span className="text-xs text-gray-400">{new Date(s.created_at).toLocaleString('it-IT')}</span>
-                  {(s.status === 'pending' || s.status === 'failed') && (
+                  {!isViewer && (s.status === 'pending' || s.status === 'failed') && (
                     <button onClick={(e) => { e.stopPropagation(); handleRetry(s); }} disabled={retryingId === s.id} className="text-xs text-blue-600 hover:underline disabled:opacity-50 font-medium">
                       {retryingId === s.id ? t('scan.starting') : t('scan.retry')}
                     </button>
                   )}
                   {s.status === 'completed' && <span className="text-xs text-gray-400">{isOpen(s.id) ? t('scan.detailsOpen') : t('scan.detailsClose')}</span>}
-                  <button onClick={(e) => handleRemove(e, s.id)} disabled={removingId === s.id} className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40">
-                    {removingId === s.id ? '…' : '✕'}
-                  </button>
+                  {!isViewer && (
+                    <button onClick={(e) => handleRemove(e, s.id)} disabled={removingId === s.id} className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40">
+                      {removingId === s.id ? '…' : '✕'}
+                    </button>
+                  )}
                 </div>
               </div>
 

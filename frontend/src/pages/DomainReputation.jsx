@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { domain as domainApi } from '../api/domain';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -55,6 +56,8 @@ function ScoreBar({ score }) {
 
 export default function DomainReputation() {
   const { t } = useSettings();
+  const { user } = useAuth();
+  const isViewer = user?.role === 'viewer';
   const { data: domains, loading, error, refetch } = useApi(() => domainApi.list());
   const [newDomain, setNewDomain] = useState('');
   const [adding, setAdding] = useState(false);
@@ -140,19 +143,21 @@ export default function DomainReputation() {
         </button>
       </div>
 
-      <form onSubmit={handleAdd} className="flex gap-3 mb-4">
-        <input
-          type="text"
-          placeholder="example.com"
-          value={newDomain}
-          onChange={(e) => setNewDomain(e.target.value)}
-          required
-          className="form-input flex-1"
-        />
-        <button type="submit" disabled={adding} className="btn-primary whitespace-nowrap">
-          {adding ? t('domain.adding') : t('domain.addBtn')}
-        </button>
-      </form>
+      {!isViewer && (
+        <form onSubmit={handleAdd} className="flex gap-3 mb-4">
+          <input
+            type="text"
+            placeholder="example.com"
+            value={newDomain}
+            onChange={(e) => setNewDomain(e.target.value)}
+            required
+            className="form-input flex-1"
+          />
+          <button type="submit" disabled={adding} className="btn-primary whitespace-nowrap">
+            {adding ? t('domain.adding') : t('domain.addBtn')}
+          </button>
+        </form>
+      )}
       {addError && <p className="text-sm text-red-600 mb-4">{addError}</p>}
       {actionError && <p className="text-sm text-red-600 mb-4">{actionError}</p>}
 
@@ -191,29 +196,31 @@ export default function DomainReputation() {
                     </p>
                   )}
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  {!d.is_verified && (
-                    <button
-                      onClick={() => handleVerify(d.id)}
-                      disabled={busyId === d.id}
-                      className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                    >
-                      {t('domain.verify')}
+                {!isViewer && (
+                  <div className="flex gap-2 flex-shrink-0">
+                    {!d.is_verified && (
+                      <button
+                        onClick={() => handleVerify(d.id)}
+                        disabled={busyId === d.id}
+                        className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                      >
+                        {t('domain.verify')}
+                      </button>
+                    )}
+                    {d.is_verified && (
+                      <button
+                        onClick={() => handleScan(d.id)}
+                        disabled={busyId === d.id}
+                        className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                      >
+                        {scanningId === d.id ? t('domain.scanning') : t('domain.scan')}
+                      </button>
+                    )}
+                    <button onClick={() => handleDelete(d.id)} className="text-xs font-medium text-red-500 hover:text-red-700">
+                      {t('common.remove')}
                     </button>
-                  )}
-                  {d.is_verified && (
-                    <button
-                      onClick={() => handleScan(d.id)}
-                      disabled={busyId === d.id}
-                      className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                    >
-                      {scanningId === d.id ? t('domain.scanning') : t('domain.scan')}
-                    </button>
-                  )}
-                  <button onClick={() => handleDelete(d.id)} className="text-xs font-medium text-red-500 hover:text-red-700">
-                    {t('common.remove')}
-                  </button>
-                </div>
+                  </div>
+                )}
               </div>
               {d.scan_findings?.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-corvin-100 space-y-1.5">

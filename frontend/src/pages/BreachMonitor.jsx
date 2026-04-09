@@ -5,6 +5,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import InfoModal from '../components/InfoModal';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 
 const INFO_SECTIONS = [
   {
@@ -83,6 +84,8 @@ const getDataClassColor = (cls) => DATA_CLASS_COLORS[cls] ?? 'text-gray-600 bg-g
 
 export default function BreachMonitor() {
   const { t } = useSettings();
+  const { user } = useAuth();
+  const isViewer = user?.role === 'viewer';
   const { data: emails, loading, error, refetch } = useApi(() => breach.list());
   const { data: historyData } = useApi(() => breach.history(1, 100));
   const [newEmail, setNewEmail] = useState('');
@@ -143,19 +146,21 @@ export default function BreachMonitor() {
         </button>
       </div>
 
-      <form onSubmit={handleAdd} className="flex gap-3 mb-4">
-        <input
-          type="email"
-          placeholder={t('breach.placeholder')}
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          required
-          className="form-input flex-1"
-        />
-        <button type="submit" disabled={adding} className="btn-primary whitespace-nowrap">
-          {adding ? t('breach.adding') : t('breach.addBtn')}
-        </button>
-      </form>
+      {!isViewer && (
+        <form onSubmit={handleAdd} className="flex gap-3 mb-4">
+          <input
+            type="email"
+            placeholder={t('breach.placeholder')}
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            required
+            className="form-input flex-1"
+          />
+          <button type="submit" disabled={adding} className="btn-primary whitespace-nowrap">
+            {adding ? t('breach.adding') : t('breach.addBtn')}
+          </button>
+        </form>
+      )}
 
       {addError && <p className="text-sm text-red-600 mb-4">{addError}</p>}
 
@@ -212,12 +217,14 @@ export default function BreachMonitor() {
                             {expandedId === em.id ? t('breach.hide') : t('breach.details')}
                           </span>
                         )}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(em.id); }}
-                          className="text-xs text-red-500 hover:text-red-700 hover:underline"
-                        >
-                          {t('common.remove')}
-                        </button>
+                        {!isViewer && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(em.id); }}
+                            className="text-xs text-red-500 hover:text-red-700 hover:underline"
+                          >
+                            {t('common.remove')}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import audit
 from app.core.database import get_db
-from app.core.dependencies import get_current_active_user, get_current_org
+from app.core.dependencies import get_current_active_user, get_current_org, require_analyst
 from app.models.breach import BreachRecord, MonitoredEmail
 from app.models.organization import Organization
 from app.models.user import User
@@ -47,7 +47,7 @@ router = APIRouter()
 async def add_emails(
     payload: EmailAddRequest,
     request: Request,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_analyst),
     current_org: Organization = Depends(get_current_org),
     db: AsyncSession = Depends(get_db),
 ) -> List[MonitoredEmailResponse]:
@@ -114,7 +114,7 @@ async def list_monitored_emails(
 async def check_breaches_now(
     payload: EmailAddRequest,
     request: Request,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_analyst),
     current_org: Organization = Depends(get_current_org),
     db: AsyncSession = Depends(get_db),
 ) -> List[BreachCheckResponse]:
@@ -243,7 +243,7 @@ async def get_history(
 async def remove_monitored_email(
     monitored_id: uuid.UUID,
     request: Request,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_analyst),
     current_org: Organization = Depends(get_current_org),
     db: AsyncSession = Depends(get_db),
 ) -> None:

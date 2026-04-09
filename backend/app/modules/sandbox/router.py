@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.dependencies import get_current_active_user, require_admin, get_current_org
+from app.core.dependencies import get_current_active_user, require_admin, require_analyst, get_current_org
 from app.models.organization import Organization
 from app.models.sandbox import FileStatus, SandboxFile
 from app.models.user import User
@@ -65,7 +65,7 @@ async def upload_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_analyst),
     org: Organization = Depends(get_current_org),
 ):
     """

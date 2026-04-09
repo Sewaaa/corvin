@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_active_user, require_admin, get_current_org
+from app.core.dependencies import get_current_active_user, require_admin, require_analyst, get_current_org
 from app.models.organization import Organization
 from app.models.user import User
 from app.models.web_scan import ScanFinding, ScanStatus, ScanFrequency, WebScan
@@ -71,7 +71,7 @@ async def start_scan(
     body: ScanSchedule,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_analyst),
     org: Organization = Depends(get_current_org),
 ):
     """
