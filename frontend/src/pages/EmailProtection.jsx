@@ -114,10 +114,14 @@ function ThreatPanel({ emailAddress, onClose }) {
                     </button>
                   )}
                   {th.is_quarantined && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-500 border border-gray-200">
+                    <button
+                      onClick={() => { if (window.confirm(t('email.releaseConfirm'))) handleAction(th.id, 'release'); }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                      title={t('email.releaseHint')}
+                    >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
                       {t('email.quarantined')}
-                    </span>
+                    </button>
                   )}
                 </div>
               </div>

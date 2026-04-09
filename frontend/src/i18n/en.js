@@ -177,6 +177,8 @@ export default {
   'email.threatClose': '\u2715 Close',
   'email.threatEmpty': 'No threats found for this account.',
   'email.quarantined': 'Quarantined',
+  'email.releaseConfirm': 'Remove this email from quarantine?',
+  'email.releaseHint': 'Click to remove from quarantine',
   'email.released': 'Released',
   'email.from': 'From:',
   'email.subject': 'Subject:',
