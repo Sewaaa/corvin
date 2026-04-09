@@ -161,6 +161,83 @@ async def update_user_role(
     return UserResponse.model_validate(target)
 
 
+@router.patch("/{user_id}/reactivate", response_model=UserResponse)
+async def reactivate_user(
+    user_id: uuid.UUID,
+    request: Request,
+    current_user: User = Depends(require_admin),
+    current_org: Organization = Depends(get_current_org),
+    db: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Riattiva un account precedentemente disattivato (admin only)."""
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.organization_id == current_org.id,
+        )
+    )
+    target = result.scalar_one_or_none()
+    if target is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    target.is_active = True
+    db.add(target)
+
+    await audit(
+        db,
+        organization_id=current_org.id,
+        user_id=current_user.id,
+        action="user.reactivate",
+        resource_type="user",
+        resource_id=str(target.id),
+        ip_address=request.client.host if request.client else None,
+    )
+
+    return UserResponse.model_validate(target)
+
+
+@router.delete("/{user_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_permanent(
+    user_id: uuid.UUID,
+    request: Request,
+    current_user: User = Depends(require_admin),
+    current_org: Organization = Depends(get_current_org),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """
+    Elimina definitivamente un account (admin only).
+    Usare solo su account disattivati — libera l'email per un nuovo invito.
+    """
+    if user_id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot delete your own account",
+        )
+
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.organization_id == current_org.id,
+        )
+    )
+    target = result.scalar_one_or_none()
+    if target is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    await audit(
+        db,
+        organization_id=current_org.id,
+        user_id=current_user.id,
+        action="user.delete_permanent",
+        resource_type="user",
+        resource_id=str(target.id),
+        ip_address=request.client.host if request.client else None,
+        details={"deleted_email": target.email},
+    )
+
+    await db.delete(target)
+
+
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def deactivate_user(
     user_id: uuid.UUID,

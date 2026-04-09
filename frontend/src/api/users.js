@@ -5,4 +5,6 @@ export const users = {
   invite: (payload) => api.post('/users/invite', payload),
   updateRole: (id, role) => api.patch(`/users/${id}/role`, { role }),
   deactivate: (id) => api.delete(`/users/${id}`),
+  reactivate: (id) => api.patch(`/users/${id}/reactivate`, {}),
+  deletePermanent: (id) => api.delete(`/users/${id}/permanent`),
 };

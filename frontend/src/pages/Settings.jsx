@@ -69,6 +69,19 @@ function UsersTab() {
     catch (err) { setActionError(err.message ?? t('settings.deactivateError')); }
   };
 
+  const handleReactivate = async (userId) => {
+    setActionError('');
+    try { await usersApi.reactivate(userId); refetch(); }
+    catch (err) { setActionError(err.message ?? t('settings.reactivateError')); }
+  };
+
+  const handleDeletePermanent = async (userId, userName) => {
+    if (!window.confirm(t('settings.deleteConfirm', { name: userName }))) return;
+    setActionError('');
+    try { await usersApi.deletePermanent(userId); refetch(); }
+    catch (err) { setActionError(err.message ?? t('settings.deleteError')); }
+  };
+
   return (
     <div>
       {actionError && <p className="text-red-600 text-sm mb-4">{actionError}</p>}
@@ -152,6 +165,16 @@ function UsersTab() {
                       </select>
                       <button onClick={() => handleDeactivate(u.id)} className="text-xs text-red-500 hover:text-red-700 font-medium">
                         {t('settings.deactivate')}
+                      </button>
+                    </>
+                  )}
+                  {isAdmin && u.id !== currentUser?.id && !u.is_active && (
+                    <>
+                      <button onClick={() => handleReactivate(u.id)} className="text-xs text-green-600 hover:text-green-800 font-medium">
+                        {t('settings.reactivate')}
+                      </button>
+                      <button onClick={() => handleDeletePermanent(u.id, u.full_name)} className="text-xs text-red-500 hover:text-red-700 font-medium">
+                        {t('settings.deletePermanent')}
                       </button>
                     </>
                   )}
