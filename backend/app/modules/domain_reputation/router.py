@@ -249,6 +249,8 @@ async def remove_domain(
         resource_id=str(domain_id),
     )
 
+    await db.commit()
+
 
 async def _get_domain_or_404(
     db: AsyncSession, domain_id: uuid.UUID, organization_id: uuid.UUID
