@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
 import InfoModal from '../components/InfoModal';
+import ErrorBanner from '../components/ErrorBanner';
 
 const INFO_SECTIONS = [
   {
@@ -173,10 +174,10 @@ export default function FileSandbox() {
           {t('sandbox.uploading')}
         </div>
       )}
-      {uploadError && <p className="text-red-600 text-sm mb-4">{uploadError}</p>}
+      {uploadError && <ErrorBanner message={uploadError} className="mb-4" />}
 
       {loading && <LoadingSpinner />}
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <ErrorBanner message={error} />}
 
       {!loading && files?.length === 0 && (
         <EmptyState title={t('sandbox.emptyTitle')} description={t('sandbox.emptyDesc')} />

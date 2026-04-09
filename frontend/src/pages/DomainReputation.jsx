@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
 import InfoModal from '../components/InfoModal';
+import ErrorBanner from '../components/ErrorBanner';
 
 const INFO_SECTIONS = [
   {
@@ -158,11 +159,11 @@ export default function DomainReputation() {
           </button>
         </form>
       )}
-      {addError && <p className="text-sm text-red-600 mb-4">{addError}</p>}
-      {actionError && <p className="text-sm text-red-600 mb-4">{actionError}</p>}
+      {addError && <ErrorBanner message={addError} className="mb-4" />}
+      {actionError && <ErrorBanner message={actionError} className="mb-4" />}
 
       {loading && <LoadingSpinner />}
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <ErrorBanner message={error} />}
 
       {!loading && domains?.length === 0 && (
         <EmptyState title={t('domain.emptyTitle')} description={t('domain.emptyDesc')} />

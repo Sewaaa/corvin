@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
 import InfoModal from '../components/InfoModal';
+import ErrorBanner from '../components/ErrorBanner';
 
 const INFO_SECTIONS = [
   {
@@ -70,9 +71,9 @@ function ThreatPanel({ emailAddress, onClose }) {
         <button onClick={onClose} className="text-xs text-gray-400 hover:text-gray-700 font-medium">{t('email.threatClose')}</button>
       </div>
 
-      {actionError && <p className="text-red-600 text-xs mb-2">⚠ {actionError}</p>}
+      {actionError && <ErrorBanner message={actionError} className="mb-2" />}
       {loading && <p className="text-xs text-gray-500 py-2">Caricamento…</p>}
-      {error && <p className="text-red-600 text-xs py-2">{error}</p>}
+      {error && <ErrorBanner message={error} />}
 
       {!loading && threats.length === 0 && (
         <p className="text-sm text-gray-500 py-2">{t('email.threatEmpty')}</p>
@@ -291,7 +292,7 @@ export default function EmailProtection() {
         </button>
       </div>
 
-      {pageError && <p className="text-red-600 text-sm mb-4">⚠ {pageError}</p>}
+      {pageError && <ErrorBanner message={pageError} className="mb-4" />}
 
       {!isViewer && (
         <div className="flex justify-end mb-4">
@@ -318,7 +319,7 @@ export default function EmailProtection() {
             <input type="checkbox" checked={form.use_ssl} onChange={set('use_ssl')} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             {t('email.fieldSsl')}
           </label>
-          {saveError && <p className="text-red-600 text-sm">{saveError}</p>}
+          {saveError && <ErrorBanner message={saveError} />}
           <div className="flex items-center gap-3">
             <button type="submit" disabled={saving} className="btn-primary">
               {saving ? t('email.saving') : t('email.saveBtn')}

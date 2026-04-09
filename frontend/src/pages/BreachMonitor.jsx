@@ -4,6 +4,7 @@ import { breach } from '../api/breach';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import InfoModal from '../components/InfoModal';
+import ErrorBanner from '../components/ErrorBanner';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -162,7 +163,7 @@ export default function BreachMonitor() {
         </form>
       )}
 
-      {addError && <p className="text-sm text-red-600 mb-4">{addError}</p>}
+      {addError && <ErrorBanner message={addError} className="mb-4" />}
 
       {addResult && (
         <div className={`mb-4 p-3 rounded-lg text-sm flex items-center gap-2 ${
@@ -177,7 +178,7 @@ export default function BreachMonitor() {
       )}
 
       {loading && <LoadingSpinner />}
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <ErrorBanner message={error} />}
 
       {!loading && emails?.length === 0 && (
         <EmptyState title={t('breach.emptyTitle')} description={t('breach.emptyDesc')} />

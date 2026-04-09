@@ -8,6 +8,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
 import InfoModal from '../components/InfoModal';
+import ErrorBanner from '../components/ErrorBanner';
 
 const INFO_SECTIONS = [
   {
@@ -162,10 +163,10 @@ export default function WebScanner() {
         </form>
       )}
 
-      {startError && <p className="text-red-600 text-sm mb-4">{startError}</p>}
-      {detailError && <p className="text-red-600 text-sm mb-4">⚠ {detailError}</p>}
+      {startError && <ErrorBanner message={startError} className="mb-4" />}
+      {detailError && <ErrorBanner message={detailError} className="mb-4" />}
       {loading && <LoadingSpinner />}
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <ErrorBanner message={error} />}
 
       {!loading && scans?.length === 0 && (
         <EmptyState title={t('scan.emptyTitle')} description={t('scan.emptyDesc')} />
