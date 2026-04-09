@@ -256,7 +256,7 @@ async def remove_monitored_email(
     )
     monitored = result.scalar_one_or_none()
     if monitored is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Email not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Email non trovata")
 
     # Elimina prima i BreachRecord correlati (evita lazy-load in async)
     await db.execute(

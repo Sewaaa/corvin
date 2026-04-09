@@ -65,7 +65,7 @@ async def invite_user(
     if existing.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="A user with this email already exists",
+            detail="Esiste già un utente con questa email",
         )
 
     new_user = User(
@@ -130,7 +130,7 @@ async def update_user_role(
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You cannot change your own role",
+            detail="Non puoi cambiare il tuo stesso ruolo",
         )
 
     result = await db.execute(
@@ -141,7 +141,7 @@ async def update_user_role(
     )
     target = result.scalar_one_or_none()
     if target is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utente non trovato")
 
     old_role = target.role
     target.role = payload.role
@@ -178,7 +178,7 @@ async def reactivate_user(
     )
     target = result.scalar_one_or_none()
     if target is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utente non trovato")
 
     target.is_active = True
     db.add(target)
@@ -211,7 +211,7 @@ async def delete_user_permanent(
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You cannot delete your own account",
+            detail="Non puoi eliminare il tuo stesso account",
         )
 
     result = await db.execute(
@@ -222,7 +222,7 @@ async def delete_user_permanent(
     )
     target = result.scalar_one_or_none()
     if target is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utente non trovato")
 
     await audit(
         db,
@@ -253,7 +253,7 @@ async def deactivate_user(
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You cannot deactivate your own account",
+            detail="Non puoi disattivare il tuo stesso account",
         )
 
     result = await db.execute(
@@ -264,7 +264,7 @@ async def deactivate_user(
     )
     target = result.scalar_one_or_none()
     if target is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utente non trovato")
 
     target.is_active = False
     db.add(target)

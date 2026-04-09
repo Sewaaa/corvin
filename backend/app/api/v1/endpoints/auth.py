@@ -70,7 +70,7 @@ async def register(
     if result.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Registration failed. Please check your details and try again.",
+            detail="Registrazione fallita. Controlla i dati inseriti e riprova.",
         )
 
     # Create organization
@@ -130,7 +130,7 @@ async def login(
     """
     INVALID_CREDENTIALS = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid email or password",
+        detail="Email o password non validi",
     )
 
     result = await db.execute(select(User).where(User.email == payload.email.lower()))
@@ -147,19 +147,19 @@ async def login(
         raise INVALID_CREDENTIALS
 
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is inactive")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account disattivato")
 
     # MFA check
     if user.mfa_enabled:
         if not payload.mfa_code:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="MFA code required",
+                detail="Codice MFA richiesto",
             )
         if not verify_totp(user.mfa_secret, payload.mfa_code):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid MFA code",
+                detail="Codice MFA non valido",
             )
 
     # Update last login
@@ -192,14 +192,14 @@ async def refresh_token(
     if token_payload.get("type") != "refresh":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type",
+            detail="Tipo di token non valido",
         )
 
     user_id = token_payload.get("sub")
     result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
     user = result.scalar_one_or_none()
     if user is None or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utente non trovato")
 
     token_data = {"sub": str(user.id), "org_id": str(user.organization_id), "role": user.role.value}
     return TokenResponse(
@@ -222,7 +222,7 @@ async def setup_mfa(
     if current_user.mfa_enabled:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="MFA is already enabled for this account",
+            detail="MFA già attivato su questo account",
         )
 
     secret = generate_totp_secret()
@@ -244,13 +244,13 @@ async def verify_mfa(
     if not current_user.mfa_secret:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="MFA setup not initiated. Call /auth/mfa/setup first.",
+            detail="Setup MFA non avviato. Chiama prima /auth/mfa/setup.",
         )
 
     if not verify_totp(current_user.mfa_secret, payload.code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid TOTP code",
+            detail="Codice TOTP non valido",
         )
 
     current_user.mfa_enabled = True

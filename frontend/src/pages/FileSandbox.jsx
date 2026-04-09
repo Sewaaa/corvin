@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useApi } from '../hooks/useApi';
 import { sandbox as sandboxApi } from '../api/sandbox';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -88,6 +89,8 @@ function YaraMatches({ matches, t }) {
 
 export default function FileSandbox() {
   const { t } = useSettings();
+  const { user } = useAuth();
+  const isViewer = user?.role === 'viewer';
   const { data: files, loading, error, refetch } = useApi(() => sandboxApi.list());
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -163,7 +166,7 @@ export default function FileSandbox() {
         </button>
       </div>
 
-      <DropZone onFile={handleFile} t={t} />
+      {!isViewer && <DropZone onFile={handleFile} t={t} />}
       {uploading && (
         <div className="flex items-center gap-2 text-sm text-blue-600 mb-4 animate-pulse">
           <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>

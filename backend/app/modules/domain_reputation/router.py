@@ -187,7 +187,7 @@ async def scan_domain_now(
     if not domain_obj.is_verified:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Domain must be verified before scanning. Call POST /domain/{id}/verify first.",
+            detail="Il dominio deve essere verificato prima della scansione.",
         )
 
     # Usa BackgroundTasks di FastAPI per scan leggeri in-process
@@ -262,5 +262,5 @@ async def _get_domain_or_404(
     )
     domain_obj = result.scalar_one_or_none()
     if domain_obj is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Domain not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dominio non trovato")
     return domain_obj

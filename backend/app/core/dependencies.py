@@ -23,7 +23,7 @@ async def get_current_user(
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
+            detail="Autenticazione richiesta",
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = credentials.credentials
@@ -32,13 +32,13 @@ async def get_current_user(
     if token_type != "access":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type",
+            detail="Tipo di token non valido",
         )
     user_id: Optional[str] = payload.get("sub")
     if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail="Credenziali non valide",
         )
 
     result = await db.execute(select(User).where(User.id == UUID(user_id)))
@@ -46,7 +46,7 @@ async def get_current_user(
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
+            detail="Utente non trovato",
         )
     return user
 
@@ -58,7 +58,7 @@ async def get_current_active_user(
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is inactive",
+            detail="Account disattivato",
         )
     return current_user
 
@@ -71,7 +71,7 @@ async def require_analyst(
     if current_user.role == UserRole.VIEWER:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Analyst or admin privileges required",
+            detail="Privilegi di analyst o admin richiesti",
         )
     return current_user
 
@@ -84,7 +84,7 @@ async def require_admin(
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges required",
+            detail="Privilegi di amministratore richiesti",
         )
     return current_user
 
@@ -106,6 +106,6 @@ async def get_current_org(
     if org is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Organization not found",
+            detail="Organizzazione non trovata",
         )
     return org
