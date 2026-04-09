@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
+    resend_api_key: str = ""
+    email_from: str = "Corvin <onboarding@resend.dev>"
     frontend_url: str = "https://corvin-frontend.onrender.com"
 
     # File upload

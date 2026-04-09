@@ -138,8 +138,37 @@ def _send_smtp_sync(to_address: str, subject: str, body_html: str) -> bool:
         return False
 
 
+async def _send_resend_email(to_address: str, subject: str, body_html: str) -> bool:
+    """Invio via Resend HTTP API — non richiede SMTP aperto."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {settings.resend_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": settings.email_from,
+                    "to": [to_address],
+                    "subject": subject,
+                    "html": body_html,
+                },
+            )
+        if resp.status_code in (200, 201):
+            logger.info("resend_delivered", to=to_address)
+            return True
+        logger.error("resend_failed", to=to_address, status=resp.status_code, body=resp.text[:200])
+        return False
+    except Exception as exc:
+        logger.error("resend_error", to=to_address, error=str(exc))
+        return False
+
+
 async def send_smtp_email(to_address: str, subject: str, body_html: str) -> bool:
-    """Async wrapper per invio SMTP."""
+    """Invia email: usa Resend se configurato, altrimenti SMTP."""
+    if settings.resend_api_key:
+        return await _send_resend_email(to_address, subject, body_html)
     return await asyncio.to_thread(_send_smtp_sync, to_address, subject, body_html)
 
 
