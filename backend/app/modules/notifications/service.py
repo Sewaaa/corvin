@@ -220,7 +220,7 @@ def build_invite_email_html(
         <!-- Header violet -->
         <tr>
           <td style="background:linear-gradient(135deg,#7C3AED 0%,#6D28D9 100%);padding:36px 40px;text-align:center;">
-            <div style="display:inline-block;width:56px;height:56px;background:rgba(255,255,255,0.18);border-radius:16px;line-height:56px;font-size:30px;font-weight:900;color:#ffffff;margin-bottom:16px;font-family:Georgia,serif;letter-spacing:-1px;">C</div>
+            <img src="{settings.frontend_url}/logo-email.png" width="64" height="64" alt="Corvin" style="display:block;margin:0 auto 16px;border-radius:14px;" />
             <h1 style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Corvin</h1>
             <p style="margin:4px 0 0;font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;">Threat Intelligence Platform</p>
           </td>
