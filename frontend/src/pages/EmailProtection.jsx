@@ -79,59 +79,47 @@ function ThreatPanel({ emailAddress, onClose }) {
       )}
 
       {!loading && threats.length > 0 && (
-        <div className="space-y-2">
-          {threats.map((th) => (
-            <div key={th.id} className="bg-corvin-50 rounded-lg px-3 py-2 border border-corvin-100">
-              <div className="flex items-start justify-between gap-2">
+        <div className="divide-y divide-corvin-100">
+          {threats.map((th) => {
+            const authFail = [
+              th.spf_result !== 'pass' && th.spf_result ? `SPF: ${th.spf_result}` : null,
+              th.dkim_result !== 'pass' && th.dkim_result ? `DKIM: ${th.dkim_result}` : null,
+              th.dmarc_result !== 'pass' && th.dmarc_result ? `DMARC: ${th.dmarc_result}` : null,
+            ].filter(Boolean);
+
+            return (
+              <div key={th.id} className="py-2.5 flex items-center gap-3">
+                <SeverityBadge value={th.severity} />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <SeverityBadge value={th.severity} />
-                    <span className="text-xs text-gray-900 font-semibold">{th.threat_type}</span>
-                    {th.is_quarantined && (
-                      <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-medium">{t('email.quarantined')}</span>
-                    )}
-                    {th.is_released && (
-                      <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">{t('email.released')}</span>
-                    )}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-semibold text-gray-700">{th.threat_type}</span>
+                    {th.is_quarantined && <span className="text-xs text-amber-600 font-medium">· {t('email.quarantined')}</span>}
+                    {th.is_released && <span className="text-xs text-green-600 font-medium">· {t('email.released')}</span>}
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{t('email.from')} {th.sender}</p>
-                  {th.subject && <p className="text-xs text-gray-400 truncate">{t('email.subject')} {th.subject}</p>}
-                  {th.detection_reasons?.length > 0 && (
-                    <p className="text-xs text-gray-400 mt-0.5">↳ {th.detection_reasons.join(', ')}</p>
+                  <p className="text-xs text-gray-400 truncate mt-0.5">
+                    {th.sender}
+                    {th.subject && <span className="text-gray-300"> · </span>}
+                    {th.subject && <span className="italic">{th.subject}</span>}
+                  </p>
+                  {authFail.length > 0 && (
+                    <p className="text-xs text-red-500 mt-0.5">{authFail.join(' · ')}</p>
                   )}
-                  <div className="flex gap-3 mt-1 text-xs">
-                    {th.spf_result && (
-                      <span className={th.spf_result === 'pass' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                        SPF: {th.spf_result}
-                      </span>
-                    )}
-                    {th.dkim_result && (
-                      <span className={th.dkim_result === 'pass' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                        DKIM: {th.dkim_result}
-                      </span>
-                    )}
-                    {th.dmarc_result && (
-                      <span className={th.dmarc_result === 'pass' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                        DMARC: {th.dmarc_result}
-                      </span>
-                    )}
-                  </div>
                 </div>
                 <div className="shrink-0">
                   {!th.is_quarantined && !th.is_released && (
-                    <button onClick={() => handleAction(th.id, 'quarantine')} className="text-xs text-amber-600 hover:underline font-medium">
+                    <button onClick={() => handleAction(th.id, 'quarantine')} className="text-xs text-amber-600 hover:text-amber-800 font-medium">
                       {t('email.quarantine')}
                     </button>
                   )}
                   {th.is_quarantined && (
-                    <button onClick={() => handleAction(th.id, 'release')} className="text-xs text-green-600 hover:underline font-medium">
+                    <button onClick={() => handleAction(th.id, 'release')} className="text-xs text-green-600 hover:text-green-800 font-medium">
                       {t('email.release')}
                     </button>
                   )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
