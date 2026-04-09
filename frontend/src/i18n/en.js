@@ -211,6 +211,8 @@ export default {
   'notif.tabNotifUnread': 'Notifications \u00b7 {count} unread',
   'notif.tabWebhook': 'Webhooks',
   'notif.markAll': 'Mark all as read',
+  'notif.clearAll': 'Clear all',
+  'notif.clearAllConfirm': 'Are you sure you want to delete all notifications? This action is irreversible.',
   'notif.emptyTitle': 'No notifications',
   'notif.emptyDesc': 'Notifications will appear here when modules detect events.',
   'notif.markRead': '\u2713 Read',

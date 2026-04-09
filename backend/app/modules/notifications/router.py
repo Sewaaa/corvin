@@ -16,7 +16,7 @@ from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -278,5 +278,19 @@ async def mark_all_read(
     )
     await db.commit()
     return {"status": "ok", "message": "Tutte le notifiche sono state segnate come lette"}
+
+
+@router.delete(
+    "/all",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Elimina tutte le notifiche dell'organizzazione (solo admin)",
+    dependencies=[Depends(require_admin)],
+)
+async def delete_all_notifications(
+    db: AsyncSession = Depends(get_db),
+    org: Organization = Depends(get_current_org),
+):
+    await db.execute(delete(Notification).where(Notification.organization_id == org.id))
+    await db.commit()
 
 

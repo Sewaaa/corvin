@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { notifications as notifApi } from '../api/notifications';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import SeverityBadge from '../components/SeverityBadge';
@@ -55,7 +56,10 @@ function Tab({ label, active, onClick }) {
 
 export default function Notifications() {
   const { t } = useSettings();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [tab, setTab] = useState('notifications');
+  const [clearingAll, setClearingAll] = useState(false);
   const { data, loading, error, refetch } = useApi(() => notifApi.list());
   const { data: webhooks, loading: loadingW, refetch: refetchW } = useApi(() => notifApi.listWebhooks());
   const [whForm, setWhForm] = useState({ url: '', secret: '', events: ['*'] });
@@ -70,6 +74,13 @@ export default function Notifications() {
 
   const handleMarkAll = async () => {
     try { await notifApi.markAllRead(); refetch(); } catch {}
+  };
+
+  const handleClearAll = async () => {
+    if (!window.confirm(t('notif.clearAllConfirm'))) return;
+    setClearingAll(true);
+    try { await notifApi.deleteAll(); refetch(); } catch {}
+    finally { setClearingAll(false); }
   };
 
   const handleAddWebhook = async (e) => {
@@ -118,11 +129,22 @@ export default function Notifications() {
 
       {tab === 'notifications' && (
         <div>
-          {data?.unread > 0 && (
-            <div className="flex justify-end mb-4">
-              <button onClick={handleMarkAll} className="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                {t('notif.markAll')}
-              </button>
+          {(data?.unread > 0 || (isAdmin && data?.items?.length > 0)) && (
+            <div className="flex justify-end gap-4 mb-4">
+              {data?.unread > 0 && (
+                <button onClick={handleMarkAll} className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                  {t('notif.markAll')}
+                </button>
+              )}
+              {isAdmin && data?.items?.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  disabled={clearingAll}
+                  className="text-xs text-red-500 hover:text-red-700 font-medium disabled:opacity-50"
+                >
+                  {clearingAll ? '...' : t('notif.clearAll')}
+                </button>
+              )}
             </div>
           )}
 

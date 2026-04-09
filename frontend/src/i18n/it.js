@@ -223,6 +223,8 @@ export default {
   'notif.tabNotifUnread': 'Notifiche \u00b7 {count} non lette',
   'notif.tabWebhook': 'Webhook',
   'notif.markAll': 'Segna tutte come lette',
+  'notif.clearAll': 'Svuota tutto',
+  'notif.clearAllConfirm': 'Sei sicuro di voler eliminare tutte le notifiche? Questa azione è irreversibile.',
   'notif.emptyTitle': 'Nessuna notifica',
   'notif.emptyDesc': 'Le notifiche appariranno qui quando i moduli rilevano eventi.',
   'notif.markRead': '\u2713 Letta',

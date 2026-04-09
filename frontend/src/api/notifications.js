@@ -9,4 +9,5 @@ export const notifications = {
   addWebhook: (payload) => api.post('/notifications/webhooks', payload),
   deleteWebhook: (id) => api.delete(`/notifications/webhooks/${id}`),
   testWebhook: (id) => api.post(`/notifications/webhooks/${id}/test`),
+  deleteAll: () => api.delete('/notifications/all'),
 };
