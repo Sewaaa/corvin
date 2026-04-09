@@ -346,9 +346,9 @@ export default {
   'severity.inactive': 'Inattivo',
 
   // Roles
-  'role.admin': 'Admin',
-  'role.analyst': 'Analyst',
-  'role.viewer': 'Viewer',
+  'role.admin': 'Amministratore',
+  'role.analyst': 'Analista',
+  'role.viewer': 'Osservatore',
 
   // Theme
   'theme.light': 'Chiaro',

@@ -21,7 +21,7 @@ function Tab({ label, active, onClick }) {
   );
 }
 
-const ROLE_LABELS = { admin: 'Admin', analyst: 'Analyst', viewer: 'Viewer' };
+const ROLE_KEYS = { admin: 'role.admin', analyst: 'role.analyst', viewer: 'role.viewer' };
 const ROLE_COLORS = {
   admin:   'text-red-700 bg-red-50 border-red-200',
   analyst: 'text-blue-700 bg-blue-50 border-blue-200',
@@ -112,9 +112,9 @@ function UsersTab() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('settings.inviteRole')}</label>
               <select value={form.role} onChange={(e) => setForm(f => ({...f, role: e.target.value}))} className="form-select w-full">
-                <option value="viewer">Viewer</option>
-                <option value="analyst">Analyst</option>
-                <option value="admin">Admin</option>
+                <option value="viewer">{t('role.viewer')}</option>
+                <option value="analyst">{t('role.analyst')}</option>
+                <option value="admin">{t('role.admin')}</option>
               </select>
             </div>
           </div>
@@ -150,7 +150,7 @@ function UsersTab() {
 
                 <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
                   <span className={`px-2 py-0.5 text-xs rounded-full border font-semibold ${ROLE_COLORS[u.role] ?? ROLE_COLORS.viewer}`}>
-                    {ROLE_LABELS[u.role] ?? u.role}
+                    {t(ROLE_KEYS[u.role] ?? u.role)}
                   </span>
                   {isAdmin && u.id !== currentUser?.id && u.is_active && (
                     <>
