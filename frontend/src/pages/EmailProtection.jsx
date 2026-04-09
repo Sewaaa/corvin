@@ -109,7 +109,7 @@ function ThreatPanel({ emailAddress, onClose }) {
                   {!th.is_quarantined && !th.is_released && (
                     <button
                       onClick={() => handleAction(th.id, 'quarantine')}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 shadow-sm transition-colors cursor-pointer"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
                       {t('email.quarantine')}
@@ -118,7 +118,7 @@ function ThreatPanel({ emailAddress, onClose }) {
                   {th.is_quarantined && (
                     <button
                       onClick={() => handleAction(th.id, 'release')}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 active:bg-green-800 shadow-sm transition-colors cursor-pointer"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                       {t('email.release')}
