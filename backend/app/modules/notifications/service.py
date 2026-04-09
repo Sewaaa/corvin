@@ -206,20 +206,9 @@ def build_invite_email_html(
     login_url: str,
 ) -> str:
     """
-    Email di invito branded Corvin con logo, credenziali temporanee e link di accesso.
+    Email di invito branded Corvin con credenziali temporanee e link di accesso.
+    Nota: SVG non supportato nei client email — si usa logo testuale.
     """
-    raven_svg = (
-        '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" '
-        'viewBox="0 0 24 24" fill="white" aria-hidden="true">'
-        '<path fill-rule="evenodd" d="'
-        "M 5 20 C 3.5 16 3.5 10 5.5 7 C 7 5 9.5 3.5 12.5 3.5 "
-        "C 15.5 3.5 17.5 5 18.5 6.5 L 22 9 C 22.5 10 22 11.2 21 11 "
-        "L 18.5 10 C 17.5 10.5 16.5 12 15.5 14 C 14 17 12 19.5 9.5 21 "
-        "L 7.5 21.5 L 6 20.5 Z "
-        "M 16.2 7 a 1.25 1.25 0 1 0 -2.5 0 a 1.25 1.25 0 1 0 2.5 0"
-        '"/></svg>'
-    )
-
     return f"""<!DOCTYPE html>
 <html lang="it">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -231,9 +220,7 @@ def build_invite_email_html(
         <!-- Header violet -->
         <tr>
           <td style="background:linear-gradient(135deg,#7C3AED 0%,#6D28D9 100%);padding:36px 40px;text-align:center;">
-            <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:14px;margin-bottom:16px;">
-              {raven_svg}
-            </div>
+            <div style="display:inline-block;width:56px;height:56px;background:rgba(255,255,255,0.18);border-radius:16px;line-height:56px;font-size:30px;font-weight:900;color:#ffffff;margin-bottom:16px;font-family:Georgia,serif;letter-spacing:-1px;">C</div>
             <h1 style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Corvin</h1>
             <p style="margin:4px 0 0;font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;">Threat Intelligence Platform</p>
           </td>
