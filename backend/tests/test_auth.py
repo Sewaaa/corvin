@@ -34,7 +34,7 @@ async def test_register_duplicate_email(client):
     response = await client.post("/api/v1/auth/register", json=REGISTER_PAYLOAD)
     # Generic conflict error — must not reveal whether email exists
     assert response.status_code == 409
-    assert "Registration failed" in response.json()["detail"]
+    assert "Registrazione fallita" in response.json()["detail"]
 
 
 @pytest.mark.asyncio
@@ -75,7 +75,7 @@ async def test_login_wrong_password(client):
     )
     assert response.status_code == 401
     # Error message must NOT distinguish wrong password from unknown email
-    assert "Invalid email or password" in response.json()["detail"]
+    assert "Email o password non validi" in response.json()["detail"]
 
 
 @pytest.mark.asyncio
@@ -86,7 +86,7 @@ async def test_login_nonexistent_user(client):
     )
     assert response.status_code == 401
     # Same generic message — prevents user enumeration
-    assert "Invalid email or password" in response.json()["detail"]
+    assert "Email o password non validi" in response.json()["detail"]
 
 
 # ---------------------------------------------------------------------------
