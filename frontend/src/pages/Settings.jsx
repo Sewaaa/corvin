@@ -159,9 +159,9 @@ function UsersTab() {
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
                         className="form-select text-xs py-1 px-2"
                       >
-                        <option value="viewer">Viewer</option>
-                        <option value="analyst">Analyst</option>
-                        <option value="admin">Admin</option>
+                        <option value="viewer">{t('role.viewer')}</option>
+                        <option value="analyst">{t('role.analyst')}</option>
+                        <option value="admin">{t('role.admin')}</option>
                       </select>
                       <button onClick={() => handleDeactivate(u.id)} className="text-xs text-red-500 hover:text-red-700 font-medium">
                         {t('settings.deactivate')}
