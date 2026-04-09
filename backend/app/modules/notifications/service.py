@@ -139,17 +139,14 @@ def _send_smtp_sync(to_address: str, subject: str, body_html: str) -> bool:
 
 
 async def _send_resend_email(to_address: str, subject: str, body_html: str) -> bool:
-    """Invio via Resend HTTP API — non richiede SMTP aperto."""
+    """Invio via Resend HTTP API."""
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.post(
                 "https://api.resend.com/emails",
-                headers={
-                    "Authorization": f"Bearer {settings.resend_api_key}",
-                    "Content-Type": "application/json",
-                },
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
                 json={
-                    "from": settings.email_from,
+                    "from": f"{settings.email_from_name} <{settings.email_from_address or 'onboarding@resend.dev'}>",
                     "to": [to_address],
                     "subject": subject,
                     "html": body_html,
@@ -165,8 +162,37 @@ async def _send_resend_email(to_address: str, subject: str, body_html: str) -> b
         return False
 
 
+async def _send_brevo_email(to_address: str, subject: str, body_html: str) -> bool:
+    """Invio via Brevo (ex Sendinblue) HTTP API — non richiede dominio custom."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": settings.brevo_api_key},
+                json={
+                    "sender": {
+                        "name": settings.email_from_name,
+                        "email": settings.email_from_address,
+                    },
+                    "to": [{"email": to_address}],
+                    "subject": subject,
+                    "htmlContent": body_html,
+                },
+            )
+        if resp.status_code in (200, 201):
+            logger.info("brevo_delivered", to=to_address)
+            return True
+        logger.error("brevo_failed", to=to_address, status=resp.status_code, body=resp.text[:200])
+        return False
+    except Exception as exc:
+        logger.error("brevo_error", to=to_address, error=str(exc))
+        return False
+
+
 async def send_smtp_email(to_address: str, subject: str, body_html: str) -> bool:
-    """Invia email: usa Resend se configurato, altrimenti SMTP."""
+    """Invia email: Brevo → Resend → SMTP (primo disponibile)."""
+    if settings.brevo_api_key and settings.email_from_address:
+        return await _send_brevo_email(to_address, subject, body_html)
     if settings.resend_api_key:
         return await _send_resend_email(to_address, subject, body_html)
     return await asyncio.to_thread(_send_smtp_sync, to_address, subject, body_html)

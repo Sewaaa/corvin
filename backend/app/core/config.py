@@ -55,7 +55,9 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     resend_api_key: str = ""
-    email_from: str = "Corvin <onboarding@resend.dev>"
+    brevo_api_key: str = ""
+    email_from_name: str = "Corvin"
+    email_from_address: str = ""
     frontend_url: str = "https://corvin-frontend.onrender.com"
 
     # File upload
